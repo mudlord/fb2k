@@ -125,20 +125,31 @@ namespace {
 		}
 	};
 	static void RunConfigPopup(const dsp_preset & p_data, HWND p_parent, dsp_preset_edit_callback & p_callback);
+
+	const struct {
+		float delay_ms = 25.0;
+		float depth_ms = 1.0;
+		float lfo_freq = 0.8;
+		float drywet = 1.0;
+	}defaults_chorus;
+
 	class dsp_chorus : public dsp_impl_base
 	{
 		int m_rate, m_ch, m_ch_mask;
 		float delay_ms, depth_ms, lfo_freq, drywet;
 		pfc::array_t<Chorus> m_buffers;
 		bool enabled;
+
+
+		
 	public:
 		dsp_chorus(dsp_preset const & in) :m_rate(0), m_ch(0), m_ch_mask(0) {
 			// Mark buffer as empty.
 			enabled = true;
-			delay_ms = 25.0;
-			depth_ms = 1.0;
-			lfo_freq = 0.8;
-			drywet = 1.;
+			delay_ms = defaults_chorus.delay_ms;
+			depth_ms = defaults_chorus.depth_ms;
+			lfo_freq = defaults_chorus.lfo_freq;
+			drywet = defaults_chorus.drywet;
 			parse_preset(delay_ms, depth_ms, lfo_freq, drywet, enabled, in);
 		}
 
@@ -213,7 +224,8 @@ namespace {
 		}
 		static bool g_get_default_preset(dsp_preset & p_out)
 		{
-			make_preset(25., 1.0, 0.8, 1., true, p_out);
+			make_preset(defaults_chorus.delay_ms, defaults_chorus.depth_ms, 
+				defaults_chorus.lfo_freq, defaults_chorus.drywet, true, p_out);
 			return true;
 		}
 		static void g_show_config_popup(const dsp_preset & p_data, HWND p_parent, dsp_preset_edit_callback & p_callback)
@@ -245,7 +257,8 @@ namespace {
 				parser >> enabled;
 			}
 			catch (exception_io_data) {
-				delay_ms = 25.0; depth_ms = 1.0; lfo_freq = 0.8; drywet = 1.; enabled = true;
+				delay_ms = defaults_chorus.delay_ms; depth_ms = defaults_chorus.depth_ms; lfo_freq = defaults_chorus.lfo_freq; 
+				drywet = defaults_chorus.drywet; enabled = true;
 			}
 		}
 	};
@@ -268,11 +281,71 @@ namespace {
 			MSG_WM_INITDIALOG(OnInitDialog)
 			COMMAND_HANDLER_EX(IDOK, BN_CLICKED, OnButton)
 			COMMAND_HANDLER_EX(IDCANCEL, BN_CLICKED, OnButton)
+			COMMAND_HANDLER_EX(IDC_RESETCHR1,BN_CLICKED,OnReset1)
+			COMMAND_HANDLER_EX(IDC_RESETCHR2, BN_CLICKED, OnReset2)
+			COMMAND_HANDLER_EX(IDC_RESETCHR3, BN_CLICKED, OnReset3)
+			COMMAND_HANDLER_EX(IDC_RESETCHR4, BN_CLICKED, OnReset4)
+			COMMAND_HANDLER_EX(IDC_RESETCHR5, BN_CLICKED, OnReset5)
 			MSG_WM_HSCROLL(OnHScroll)
 			MESSAGE_HANDLER(WM_USER, OnEditControlChange)
 		END_MSG_MAP()
 
 	private:
+
+
+		void Reset(float drywet, float lfo_freq, float depth_ms, float delay_ms)
+		{
+			dsp_preset_impl preset;
+			slider_drywet.SetPos((double)(100 * drywet));
+			slider_lfofreq.SetPos((double)(100 * lfo_freq));
+			slider_depthms.SetPos((double)(100 * depth_ms));
+			slider_delayms.SetPos((double)(100 * delay_ms));
+			dsp_chorus::make_preset(delay_ms, depth_ms, lfo_freq, drywet, true, preset);
+			m_callback.on_preset_changed(preset);
+			RefreshLabel(delay_ms, depth_ms, lfo_freq, drywet);
+		}
+
+		void OnReset1(UINT, int id, CWindow)
+		{
+			delay_ms = defaults_chorus.delay_ms;
+			Reset(drywet, lfo_freq, depth_ms, delay_ms);
+
+		}
+
+		void OnReset2(UINT, int id, CWindow)
+		{
+			depth_ms = defaults_chorus.depth_ms;
+			Reset(drywet, lfo_freq, depth_ms, delay_ms);
+		}
+
+		void OnReset3(UINT, int id, CWindow)
+		{
+			lfo_freq = defaults_chorus.lfo_freq;
+			Reset(drywet, lfo_freq, depth_ms, delay_ms);
+		}
+
+		void OnReset4(UINT, int id, CWindow)
+		{
+			drywet = defaults_chorus.drywet;
+			Reset(drywet, lfo_freq, depth_ms, delay_ms);
+		}
+
+		void OnReset5(UINT, int id, CWindow)
+		{
+			dsp_preset_impl preset;
+			drywet = defaults_chorus.drywet;
+			lfo_freq = defaults_chorus.lfo_freq;
+			depth_ms = defaults_chorus.depth_ms;
+			delay_ms = defaults_chorus.delay_ms;
+			slider_drywet.SetPos((double)(100 * drywet));
+			slider_lfofreq.SetPos((double)(100 * lfo_freq));
+			slider_depthms.SetPos((double)(100 * depth_ms));
+			slider_delayms.SetPos((double)(100 * delay_ms));
+			dsp_chorus::make_preset(delay_ms, depth_ms, lfo_freq, drywet, true, preset);
+			m_callback.on_preset_changed(preset);
+			RefreshLabel(delay_ms, depth_ms, lfo_freq, drywet);
+		}
+
 		LRESULT OnEditControlChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 		{
 			if (wParam == 0x1988)
@@ -460,6 +533,11 @@ namespace {
 		BEGIN_MSG_MAP_EX(uielem_chorus)
 			MSG_WM_INITDIALOG(OnInitDialog)
 			COMMAND_HANDLER_EX(IDC_CHORUSENABLED, BN_CLICKED, OnEnabledToggle)
+			COMMAND_HANDLER_EX(IDC_RESETCHRUI1, BN_CLICKED, OnReset1)
+			COMMAND_HANDLER_EX(IDC_RESETCHRUI2, BN_CLICKED, OnReset2)
+			COMMAND_HANDLER_EX(IDC_RESETCHRUI3, BN_CLICKED, OnReset3)
+			COMMAND_HANDLER_EX(IDC_RESETCHRUI4, BN_CLICKED, OnReset4)
+			COMMAND_HANDLER_EX(IDC_RESETCHRUI5, BN_CLICKED, OnReset5)
 			MSG_WM_HSCROLL(OnScroll)
 		END_MSG_MAP()
 
@@ -499,9 +577,9 @@ namespace {
 			}
 
 
-			ret.m_min_width = MulDiv(450, DPI.cx, 96);
+			ret.m_min_width = MulDiv(520, DPI.cx, 96);
 			ret.m_min_height = MulDiv(220, DPI.cy, 96);
-			ret.m_max_width = MulDiv(450, DPI.cx, 96);
+			ret.m_max_width = MulDiv(520, DPI.cx, 96);
 			ret.m_max_height = MulDiv(220, DPI.cy, 96);
 
 			// Deal with WS_EX_STATICEDGE and alike that we might have picked from host
@@ -511,6 +589,56 @@ namespace {
 		}
 
 	private:
+		void Reset(float drywet, float lfo_freq, float depth_ms, float delay_ms)
+		{
+			slider_drywet.SetPos((double)(100 * drywet));
+			slider_lfofreq.SetPos((double)(100 * lfo_freq));
+			slider_depthms.SetPos((double)(100 * depth_ms));
+			slider_delayms.SetPos((double)(100 * delay_ms));
+			ApplySettings();
+			RefreshLabel(delay_ms, depth_ms, lfo_freq, drywet * 100);
+		}
+
+		void OnReset1(UINT, int id, CWindow)
+		{
+			delay_ms = defaults_chorus.delay_ms;
+			Reset(drywet, lfo_freq, depth_ms, delay_ms);
+
+		}
+
+		void OnReset2(UINT, int id, CWindow)
+		{
+			depth_ms = defaults_chorus.depth_ms;
+			Reset(drywet, lfo_freq, depth_ms, delay_ms);
+		}
+
+		void OnReset3(UINT, int id, CWindow)
+		{
+			lfo_freq = defaults_chorus.lfo_freq;
+			Reset(drywet, lfo_freq, depth_ms, delay_ms);
+		}
+
+		void OnReset4(UINT, int id, CWindow)
+		{
+			drywet = defaults_chorus.drywet;
+			Reset(drywet, lfo_freq, depth_ms, delay_ms);
+		}
+
+		void OnReset5(UINT, int id, CWindow)
+		{
+			drywet = defaults_chorus.drywet;
+			lfo_freq = defaults_chorus.lfo_freq;
+			depth_ms = defaults_chorus.depth_ms;
+			delay_ms = defaults_chorus.delay_ms;
+			slider_drywet.SetPos((double)(100 * drywet));
+			slider_lfofreq.SetPos((double)(100 * lfo_freq));
+			slider_depthms.SetPos((double)(100 * depth_ms));
+			slider_delayms.SetPos((double)(100 * delay_ms));
+			ApplySettings();
+			RefreshLabel(delay_ms, depth_ms, lfo_freq, drywet * 100);
+		}
+
+
 		void GetEditText()
 		{
 			bool preset_changed = false;

@@ -295,6 +295,17 @@
 #define IDC_WAVEREVERBTIME              1281
 #define IDC_WAVEREVERBTIMELAB           1282
 #define IDC_CHORUSDRYWETLAB2            1286
+#define IDC_RESETCHRUI1                 1287
+#define IDC_RESETCHR1                   1288
+#define IDC_RESETCHRUI2                 1288
+#define IDC_RESETCHR2                   1289
+#define IDC_RESETCHRUI3                 1289
+#define IDC_RESETCHR3                   1290
+#define IDC_RESETCHRUI4                 1290
+#define IDC_RESETCHR4                   1292
+#define IDC_IDC_RESETCHRUI5             1292
+#define IDC_RESETCHRUI5                 1292
+#define IDC_RESETCHR5                   1293
 #define IDC_SLIDER                      -1
 
 // Next default values for new objects
@@ -303,7 +314,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        131
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1287
+#define _APS_NEXT_CONTROL_VALUE         1291
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
