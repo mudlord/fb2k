@@ -23,22 +23,105 @@ static const GUID guid_dmo_gargle =
 static const GUID guid_dmo_waves =
 { 0x5e0bc3ff, 0xf9c1, 0x4fa1, { 0x96, 0x25, 0xf7, 0xd7, 0x4c, 0x92, 0xd3, 0x9c } };
 
+enum chorus_Parameters
+{
+	kChorusWetDryMix = 0,
+	kChorusDepth,
+	kChorusFrequency,
+	kChorusWaveShape,
+	kChorusPhase,
+	kChorusFeedback,
+	kChorusDelay,
+	kChorusNumParameters
+};
+
+
+const float params_chorus_default[kChorusNumParameters] =
+{
+0.5f,
+0.2f,
+0.11f,
+1.0f,
+0.75f,
+(40.0f + 99.0f) / 198.0f,
+0.8f
+};
+
+enum compressor_Parameters
+{
+	kCompGain = 0,
+	kCompAttack,
+	kCompRelease,
+	kCompThreshold,
+	kCompRatio,
+	kCompPredelay,
+	kCompNumParameters
+};
+
+const float params_compressor_default[kCompNumParameters] =
+{
+0.5f,
+0.02f,
+150.0f / 2950.0f,
+2.0f / 3.0f,
+0.02f,
+1.0f
+};
+
+enum distort_Parameters
+{
+	kDistGain = 0,
+	kDistEdge,
+	kDistPreLowpassCutoff,
+	kDistPostEQCenterFrequency,
+	kDistPostEQBandwidth,
+	kDistNumParameters
+};
+
+const float params_distortion_default[kDistNumParameters] =
+{
+0.7f,
+0.15f,
+1.0f,
+0.29f,
+0.29
+};
+
+enum gargle_Parameters
+{
+	kGargleRate = 0,
+	kGargleWaveShape,
+	kGargleNumParameters
+};
+
+const float params_gargle_default[kGargleNumParameters] =
+{
+0.02f,
+0.0f
+};
+
+enum waves_Parameters
+{
+	kRvbInGain = 0,
+	kRvbReverbMix,
+	kRvbReverbTime,
+	kRvbHighFreqRTRatio,
+	kWavesNumParameters
+};
+
+const float params_waves_default[kWavesNumParameters] =
+{
+1.0f,
+1.0f,
+ 1.0f / 3.0f,
+ 0.0f
+};
 
 
 
 class dsp_dmo_chorus : public dsp_impl_base
 {
-	enum Parameters
-	{
-		kChorusWetDryMix = 0,
-		kChorusDepth,
-		kChorusFrequency,
-		kChorusWaveShape,
-		kChorusPhase,
-		kChorusFeedback,
-		kChorusDelay,
-		kChorusNumParameters
-	};
+	
 	float m_param[kChorusNumParameters];
 	int m_rate, m_ch, m_ch_mask;
 	bool enabled;
@@ -111,19 +194,7 @@ public:
 
 	static bool g_get_default_preset(dsp_preset & p_out)
 	{
-		float params[kChorusNumParameters] =
-		{
-		0.5f,
-		0.2f,
-		0.11f,
-		1.0f,
-		0.75f,
-		(40.0f + 99.0f) / 198.0f,
-		0.8f
-		};
-		
-
-		make_preset(params, true, p_out);
+		make_preset((float*)params_chorus_default, true, p_out);
 		return true;
 	}
 	static void g_show_config_popup(const dsp_preset & p_data, HWND p_parent, dsp_preset_edit_callback & p_callback)
@@ -153,13 +224,7 @@ public:
 			parser >> enabled;
 		}
 		catch (exception_io_data) {
-			params[kChorusWetDryMix] = 0.5f;
-		    params[kChorusDepth] = 0.1f;
-			params[kChorusFrequency] = 0.11f;
-			params[kChorusWaveShape] = 1.0f;
-			params[kChorusPhase] = 0.75f;
-			params[kChorusFeedback] = (40.0f + 99.0f) / 198.0f;
-			params[kChorusDelay] = 0.8f;
+			pfc::copy_array_loop_t(params, params_chorus_default, kChorusNumParameters);
 			enabled = true;
 		}
 	}
@@ -177,18 +242,6 @@ public:
 		FreqRangeTotal = FreqMax - FreqMin,
 		depthmin = 0,
 		depthmax = 100,
-	};
-
-	enum Parameters
-	{
-		kChorusWetDryMix = 0,
-		kChorusDepth,
-		kChorusFrequency,
-		kChorusWaveShape,
-		kChorusPhase,
-		kChorusFeedback,
-		kChorusDelay,
-		kChorusNumParameters
 	};
 
 	BEGIN_MSG_MAP(CMyDSPPopupChorus)
@@ -345,18 +398,6 @@ public:
 		FreqRangeTotal = FreqMax - FreqMin,
 		depthmin = 0,
 		depthmax = 100,
-	};
-
-	enum Parameters
-	{
-		kChorusWetDryMix = 0,
-		kChorusDepth,
-		kChorusFrequency,
-		kChorusWaveShape,
-		kChorusPhase,
-		kChorusFeedback,
-		kChorusDelay,
-		kChorusNumParameters
 	};
 private:
 
@@ -583,18 +624,7 @@ private:
 		slider_feedback = GetDlgItem(IDC_DMOCHORUSFEEDBACK2);
 		slider_feedback.SetRange(0, 100);
 
-
-		float params2[kChorusNumParameters] =
-		{
-			0.5f,
-			0.2f,
-			0.11f,
-			1.0f,
-			0.75f,
-			(40.0f + 99.0f) / 198.0f,
-			0.8f
-		};
-		pfc::copy_array_loop_t(params, params2, kChorusNumParameters);
+		pfc::copy_array_loop_t(params, params_chorus_default, kChorusNumParameters);
 
 		m_buttonEchoEnabled = GetDlgItem(IDC_DMOCHORUSENABLE);
 		m_ownEchoUpdate = false;
@@ -665,16 +695,7 @@ static dsp_factory_t<dsp_dmo_chorus> g_dsp_chorus_factory;
 static void RunConfigPopupCompressor(const dsp_preset& p_data, HWND p_parent, dsp_preset_edit_callback& p_callback);
 class dsp_dmo_compressor : public dsp_impl_base
 {
-	enum Parameters
-	{
-		kCompGain = 0,
-		kCompAttack,
-		kCompRelease,
-		kCompThreshold,
-		kCompRatio,
-		kCompPredelay,
-		kCompNumParameters
-	};
+	
 	float m_param[kCompNumParameters];
 	int m_rate, m_ch, m_ch_mask;
 	bool enabled;
@@ -746,18 +767,7 @@ public:
 
 	static bool g_get_default_preset(dsp_preset & p_out)
 	{
-		float params[kCompNumParameters] =
-		{
-	   0.5f,
-	   0.02f,
-	  150.0f / 2950.0f,
-	  2.0f / 3.0f,
-	  0.02f,
-	  1.0f
-		};
-
-
-		make_preset(params, true, p_out);
+		make_preset((float*)params_compressor_default, true, p_out);
 		return true;
 	}
 	static void g_show_config_popup(const dsp_preset & p_data, HWND p_parent, dsp_preset_edit_callback & p_callback)
@@ -787,12 +797,7 @@ public:
 			parser >> enabled;
 		}
 		catch (exception_io_data) {
-			params[kCompGain] = 0.5f;
-			params[kCompAttack] = 0.02f;
-			params[kCompRelease] = 150.0f / 2950.0f;
-			params[kCompThreshold] = 2.0f / 3.0f;
-			params[kCompRatio] = 0.02f;
-			params[kCompPredelay] = 1.0f;
+			pfc::copy_array_loop_t(params, params_compressor_default, kCompNumParameters);
 			enabled = true;
 		}
 	}
@@ -812,17 +817,6 @@ public:
 		FreqRangeTotal = FreqMax - FreqMin,
 		depthmin = 0,
 		depthmax = 100,
-	};
-
-	enum Parameters
-	{
-		kCompGain = 0,
-		kCompAttack,
-		kCompRelease,
-		kCompThreshold,
-		kCompRatio,
-		kCompPredelay,
-		kCompNumParameters
 	};
 
 	BEGIN_MSG_MAP(CMyDSPPopupCompressor)
@@ -981,17 +975,6 @@ public:
 		FreqRangeTotal = FreqMax - FreqMin,
 		depthmin = 0,
 		depthmax = 100,
-	};
-
-	enum Parameters
-	{
-		kCompGain = 0,
-		kCompAttack,
-		kCompRelease,
-		kCompThreshold,
-		kCompRatio,
-		kCompPredelay,
-		kCompNumParameters
 	};
 
 	BEGIN_MSG_MAP(uielem_compressor)
@@ -1177,18 +1160,7 @@ private:
 		slider_predelay = GetDlgItem(IDC_COMPRESSORPREDELAY2);
 		slider_predelay.SetRange(0, 1000);
 
-
-		float params2[kCompNumParameters] =
-		{
-		0.5f,
-		0.02f,
-	   150.0f / 2950.0f,
-		2.0f / 3.0f,
-		0.02f,
-		1.0f
-		};
-		pfc::copy_array_loop_t(params, params2, kCompNumParameters);
-
+		pfc::copy_array_loop_t(params, params_compressor_default, kCompNumParameters);
 		ApplySettings();
 		return TRUE;
 	}
@@ -1288,15 +1260,7 @@ static service_factory_single_t<myElem_t3> g_myElemFactory2;
 static void RunConfigPopupDistort(const dsp_preset& p_data, HWND p_parent, dsp_preset_edit_callback& p_callback);
 class dsp_dmo_distort : public dsp_impl_base
 {
-	enum Parameters
-	{
-		kDistGain = 0,
-		kDistEdge,
-		kDistPreLowpassCutoff,
-		kDistPostEQCenterFrequency,
-		kDistPostEQBandwidth,
-		kDistNumParameters
-	};
+	
 	float m_param[kDistNumParameters];
 	int m_rate, m_ch, m_ch_mask;
 	bool enabled;
@@ -1368,17 +1332,7 @@ public:
 
 	static bool g_get_default_preset(dsp_preset & p_out)
 	{
-		float params[kDistNumParameters] =
-		{
-	   0.7f,
-	   0.15f,
-	  1.0f,
-	  0.29f,
-	  0.29
-		};
-
-
-		make_preset(params, true, p_out);
+		make_preset((float*)params_distortion_default, true, p_out);
 		return true;
 	}
 	static void g_show_config_popup(const dsp_preset & p_data, HWND p_parent, dsp_preset_edit_callback & p_callback)
@@ -1408,12 +1362,7 @@ public:
 			parser >> enabled;
 		}
 		catch (exception_io_data) {
-
-			params[kDistGain] = 0.7f;
-			params[kDistEdge] = 0.15f;
-			params[kDistPreLowpassCutoff] = 1.0f;
-			params[kDistPostEQCenterFrequency] = 0.291f;
-			params[kDistPostEQBandwidth] = 0.291f;
+			pfc::copy_array_loop_t(params, params_distortion_default, kDistNumParameters);
 			enabled = true;
 		}
 	}
@@ -1433,16 +1382,6 @@ public:
 		FreqRangeTotal = FreqMax - FreqMin,
 		depthmin = 0,
 		depthmax = 100,
-	};
-
-	enum Parameters
-	{
-		kDistGain = 0,
-		kDistEdge,
-		kDistPreLowpassCutoff,
-		kDistPostEQCenterFrequency,
-		kDistPostEQBandwidth,
-		kDistNumParameters
 	};
 
 	BEGIN_MSG_MAP(CMyDSPPopupDistort)
@@ -1593,16 +1532,6 @@ public:
 		FreqRangeTotal = FreqMax - FreqMin,
 		depthmin = 0,
 		depthmax = 100,
-	};
-
-	enum Parameters
-	{
-		kDistGain = 0,
-		kDistEdge,
-		kDistPreLowpassCutoff,
-		kDistPostEQCenterFrequency,
-		kDistPostEQBandwidth,
-		kDistNumParameters
 	};
 
 	BEGIN_MSG_MAP(uielem_distort)
@@ -1780,13 +1709,8 @@ private:
 		slider_posteqbandwidth = GetDlgItem(IDC_DISTORTIONPOSTEQBANDWIDTH);
 		slider_posteqbandwidth.SetRange(0, 100);
 
-		float params2[kDistNumParameters] = { 0 };
-		params2[kDistGain] = 0.7f;
-		params2[kDistEdge] = 0.15f;
-		params2[kDistPreLowpassCutoff] = 1.0f;
-		params2[kDistPostEQCenterFrequency] = 0.291f;
-		params2[kDistPostEQBandwidth] = 0.291f;
-		pfc::copy_array_loop_t(params, params2, kDistNumParameters);
+
+		pfc::copy_array_loop_t(params, params_distortion_default, kDistNumParameters);
 
 		ApplySettings();
 		return TRUE;
@@ -1884,13 +1808,8 @@ static service_factory_single_t<myElem_t4> g_myElemFactory3;
 static void RunConfigPopupGargle(const dsp_preset& p_data, HWND p_parent, dsp_preset_edit_callback& p_callback);
 class dsp_dmo_gargle : public dsp_impl_base
 {
-	enum Parameters
-	{
-		kGargleRate = 0,
-		kGargleWaveShape,
-		kEqNumParameters
-	};
-	float m_param[kEqNumParameters];
+	
+	float m_param[kGargleNumParameters];
 	int m_rate, m_ch, m_ch_mask;
 	bool enabled;
 	DMOFilter dmo_filt;
@@ -1924,7 +1843,7 @@ public:
 			if (m_ch <= 2)
 			{
 				dmo_filt.init(m_rate, DMO_Type::GARGLE, m_ch);
-				for (int i = 0; i < kEqNumParameters; i++)
+				for (int i = 0; i < kGargleNumParameters; i++)
 					dmo_filt.setparameter(i, m_param[i]);
 			}
 
@@ -1961,12 +1880,7 @@ public:
 
 	static bool g_get_default_preset(dsp_preset & p_out)
 	{
-		float params[kEqNumParameters] =
-		{
-	   0.02f,
-	   0.0f
-		};
-		make_preset(params, true, p_out);
+		make_preset((float*)params_gargle_default, true, p_out);
 		return true;
 	}
 	static void g_show_config_popup(const dsp_preset & p_data, HWND p_parent, dsp_preset_edit_callback & p_callback)
@@ -1975,10 +1889,10 @@ public:
 	}
 	static bool g_have_config_popup() { return true; }
 
-	static void make_preset(float params[kEqNumParameters], bool enabled, dsp_preset & out)
+	static void make_preset(float params[kGargleNumParameters], bool enabled, dsp_preset & out)
 	{
 		dsp_preset_builder builder;
-		for (int i = 0; i < kEqNumParameters; i++)
+		for (int i = 0; i < kGargleNumParameters; i++)
 			builder << params[i];
 		builder << enabled;
 		builder.finish(g_get_guid(), out);
@@ -1989,7 +1903,7 @@ public:
 		try
 		{
 			dsp_preset_parser parser(in);
-			for (int i = 0; i < kEqNumParameters; i++)
+			for (int i = 0; i < kGargleNumParameters; i++)
 			{
 				parser >> params[i];
 			}
@@ -1997,8 +1911,7 @@ public:
 		}
 		catch (exception_io_data) {
 
-			params[kGargleRate] = 0.02f;
-			params[kGargleWaveShape] = 0.0f;
+			pfc::copy_array_loop_t(params, params_gargle_default, kGargleNumParameters);
 			enabled = true;
 		}
 	}
@@ -2018,13 +1931,6 @@ public:
 		FreqRangeTotal = FreqMax - FreqMin,
 		depthmin = 0,
 		depthmax = 100,
-	};
-
-	enum Parameters
-	{
-		kGargleRate = 0,
-		kGargleWaveShape,
-		kEqNumParameters
 	};
 
 	BEGIN_MSG_MAP(CMyDSPPopupGargle)
@@ -2094,7 +2000,7 @@ private:
 
 	const dsp_preset& m_initData; // modal dialog so we can reference this caller-owned object.
 	dsp_preset_edit_callback& m_callback;
-	float params[kEqNumParameters];
+	float params[kGargleNumParameters];
 	CTrackBarCtrl slider_rate;
 };
 
@@ -2126,13 +2032,6 @@ public:
 		FreqRangeTotal = FreqMax - FreqMin,
 		depthmin = 0,
 		depthmax = 100,
-	};
-
-	enum Parameters
-	{
-		kGargleRate = 0,
-		kGargleWaveShape,
-		kEqNumParameters
 	};
 
 	BEGIN_MSG_MAP(uielem_gargle)
@@ -2285,10 +2184,7 @@ private:
 
 		slider_gain = GetDlgItem(IDC_GARGLEFREQ1);
 		slider_gain.SetRange(0, 1000);
-		float params2[kEqNumParameters] = { 0 };
-		params2[kGargleRate] = 0.02f;
-		params2[kGargleWaveShape] = 0.0f;
-		pfc::copy_array_loop_t(params, params2, kEqNumParameters);
+		pfc::copy_array_loop_t(params, params_gargle_default, kGargleNumParameters);
 		ApplySettings();
 		return TRUE;
 	}
@@ -2342,7 +2238,7 @@ private:
 		msg.reset();
 	}
 	bool m_ownEchoUpdate;
-	float params[kEqNumParameters];
+	float params[kGargleNumParameters];
 	CTrackBarCtrl slider_gain;
 	CButton m_buttonEchoEnabled;
 	bool echo_enabled;
@@ -2374,15 +2270,8 @@ static service_factory_single_t<myElem_t5> g_myElemFactory5;
 static void RunConfigPopupWaves(const dsp_preset& p_data, HWND p_parent, dsp_preset_edit_callback& p_callback);
 class dsp_dmo_waves : public dsp_impl_base
 {
-	enum Parameters
-	{
-		kRvbInGain = 0,
-		kRvbReverbMix,
-		kRvbReverbTime,
-		kRvbHighFreqRTRatio,
-		kDistNumParameters
-	};
-	float m_param[kDistNumParameters];
+	
+	float m_param[kWavesNumParameters];
 	int m_rate, m_ch, m_ch_mask;
 	bool enabled;
 	DMOFilter dmo_filt;
@@ -2453,14 +2342,8 @@ public:
 
 	static bool g_get_default_preset(dsp_preset & p_out)
 	{
-		float params[kDistNumParameters] =
-		{
-	  1.0f,
-	1.0f,
-	 1.0f / 3.0f,
-     0.0f
-		};
-		make_preset(params, true, p_out);
+	
+		make_preset((float*)params_waves_default, true, p_out);
 		return true;
 	}
 	static void g_show_config_popup(const dsp_preset & p_data, HWND p_parent, dsp_preset_edit_callback & p_callback)
@@ -2469,10 +2352,10 @@ public:
 	}
 	static bool g_have_config_popup() { return true; }
 
-	static void make_preset(float params[kDistNumParameters], bool enabled, dsp_preset & out)
+	static void make_preset(float params[kWavesNumParameters], bool enabled, dsp_preset & out)
 	{
 		dsp_preset_builder builder;
-		for (int i = 0; i < kDistNumParameters; i++)
+		for (int i = 0; i < kWavesNumParameters; i++)
 			builder << params[i];
 		builder << enabled;
 		builder.finish(g_get_guid(), out);
@@ -2483,7 +2366,7 @@ public:
 		try
 		{
 			dsp_preset_parser parser(in);
-			for (int i = 0; i < kDistNumParameters; i++)
+			for (int i = 0; i < kWavesNumParameters; i++)
 			{
 				parser >> params[i];
 			}
@@ -2491,10 +2374,7 @@ public:
 		}
 		catch (exception_io_data) {
 
-			params[kRvbInGain] = 1.0f;
-			params[kRvbReverbMix] = 1.0f;
-			params[kRvbReverbTime] = 1.0f / 3.0f;
-			params[kRvbHighFreqRTRatio] = 0.0f;
+			pfc::copy_array_loop_t(params, params_waves_default, kWavesNumParameters);
 			enabled = true;
 		}
 	}
@@ -2514,15 +2394,6 @@ public:
 		FreqRangeTotal = FreqMax - FreqMin,
 		depthmin = 0,
 		depthmax = 100,
-	};
-
-	enum Parameters
-	{
-		kRvbInGain = 0,
-		kRvbReverbMix,
-		kRvbReverbTime,
-		kRvbHighFreqRTRatio,
-		kDistNumParameters
 	};
 
 	BEGIN_MSG_MAP(CMyDSPPopupWaves)
@@ -2617,7 +2488,7 @@ private:
 
 	const dsp_preset& m_initData; // modal dialog so we can reference this caller-owned object.
 	dsp_preset_edit_callback& m_callback;
-	float params[kDistNumParameters];
+	float params[kWavesNumParameters];
 	CTrackBarCtrl slider_gain,slider_mix,slider_time;
 };
 
@@ -2649,15 +2520,6 @@ public:
 		FreqRangeTotal = FreqMax - FreqMin,
 		depthmin = 0,
 		depthmax = 100,
-	};
-
-	enum Parameters
-	{
-		kRvbInGain = 0,
-		kRvbReverbMix,
-		kRvbReverbTime,
-		kRvbHighFreqRTRatio,
-		kDistNumParameters
 	};
 
 	BEGIN_MSG_MAP(uielem_waves)
@@ -2822,12 +2684,7 @@ private:
 		slider_mix.SetRange(0, 100);
 		slider_time = GetDlgItem(IDC_WAVEREVERBTIME);
 		slider_time.SetRange(0, 100);
-		float params2[kDistNumParameters] = { 0 };
-		params2[kRvbInGain] = 1.0f;
-		params2[kRvbReverbMix] = 1.0f;
-		params2[kRvbReverbTime] = 1.0f / 3.0f;
-		params2[kRvbHighFreqRTRatio] = 0.0f;
-		pfc::copy_array_loop_t(params, params2, kDistNumParameters);
+		pfc::copy_array_loop_t(params, params_waves_default, kWavesNumParameters);
 		ApplySettings();
 		return TRUE;
 	}
@@ -2889,7 +2746,7 @@ private:
 		msg.reset();
 	}
 	bool m_ownEchoUpdate;
-	float params[kDistNumParameters];
+	float params[kWavesNumParameters];
 	CTrackBarCtrl slider_gain,slider_mix,slider_time;
 	CButton m_buttonEchoEnabled;
 	bool echo_enabled;
