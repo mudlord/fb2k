@@ -39,27 +39,8 @@ namespace foobar2000_io {
 }
 
 
-//helper
-class file_path_canonical {
-public:
-	file_path_canonical(const char * src) {filesystem::g_get_canonical_path(src,m_data);}
-	operator const char * () const {return m_data.get_ptr();}
-	const char * get_ptr() const {return m_data.get_ptr();}
-	t_size get_length() const {return m_data.get_length();}
-private:
-	pfc::string8 m_data;
-};
-
-class file_path_display {
-public:
-	file_path_display(const char * src) {filesystem::g_get_display_path(src,m_data);}
-	operator const char * () const {return m_data.get_ptr();}
-	const char * get_ptr() const {return m_data.get_ptr();}
-	t_size get_length() const {return m_data.get_length();}
-private:
-	pfc::string8 m_data;
-};
-
+pfc::string8 file_path_canonical(const char* src);
+pfc::string8 file_path_display(const char* src);
 
 
 class stream_reader_memblock_ref : public stream_reader
@@ -120,20 +101,21 @@ private:
 	t_size m_data_size,m_pointer;
 };
 
-class stream_writer_buffer_simple : public stream_writer {
+template<typename buffer_t>
+class stream_writer_buffer_simple_t : public stream_writer {
 public:
-	void write(const void * p_buffer,t_size p_bytes,abort_callback & p_abort) {
+	void write(const void * p_buffer, t_size p_bytes, abort_callback & p_abort) {
 		p_abort.check();
 		t_size base = m_buffer.get_size();
 		if (base + p_bytes < base) throw std::bad_alloc();
 		m_buffer.set_size(base + p_bytes);
-		memcpy( (t_uint8*) m_buffer.get_ptr() + base, p_buffer, p_bytes );
+		memcpy((t_uint8*)m_buffer.get_ptr() + base, p_buffer, p_bytes);
 	}
-
-	typedef pfc::array_t<t_uint8,pfc::alloc_fast> t_buffer;
-
-	pfc::array_t<t_uint8,pfc::alloc_fast> m_buffer;
+	typedef buffer_t t_buffer; // other classes reference this
+	t_buffer m_buffer;
 };
+
+typedef stream_writer_buffer_simple_t< pfc::array_t<t_uint8, pfc::alloc_fast> > stream_writer_buffer_simple;
 
 template<class t_storage>
 class stream_writer_buffer_append_ref_t : public stream_writer
@@ -295,6 +277,9 @@ public:
 	void read_string_nullterm( pfc::string_base & out ) {
 		m_stream.read_string_nullterm( out, m_abort );
 	}
+    pfc::string8 read_string() {
+        return m_stream.read_string(m_abort);
+    }
 	stream_reader & m_stream;
 	abort_callback & m_abort;
 };

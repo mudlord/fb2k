@@ -51,3 +51,7 @@ public:
 
 	FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(console_receiver);
 };
+
+
+
+

@@ -1,5 +1,10 @@
 #include "foobar2000.h"
 
+#include <pfc/bit_array_impl.h>
+#include <pfc/sort.h>
+
+#include "file_info_impl.h"
+
 
 t_size file_info_impl::meta_get_count() const
 {

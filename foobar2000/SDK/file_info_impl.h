@@ -1,5 +1,7 @@
 #pragma once
 
+#include <pfc/array.h>
+
 namespace file_info_impl_utils {
 
 	struct info_entry {

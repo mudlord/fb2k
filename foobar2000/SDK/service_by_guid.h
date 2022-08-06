@@ -7,10 +7,8 @@
 
 template<typename what>
 static bool service_by_guid_fallback(service_ptr_t<what> & out, const GUID & id) {
-	service_enum_t<what> e;
-	service_ptr_t<what> ptr;
-    while(e.next(ptr)) {
-        if (ptr->get_guid() == id) {out = ptr; return true;}
+	for (auto ptr : what::enumerate()) {
+		if (ptr->get_guid() == id) { out = ptr; return true; }
 	}
 	return false;
 }

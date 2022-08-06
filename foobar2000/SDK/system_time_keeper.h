@@ -1,3 +1,5 @@
+#pragma once
+
 namespace system_time_periods {
 	static const t_filetimestamp second = filetimestamp_1second_increment;
 	static const t_filetimestamp minute = second * 60;

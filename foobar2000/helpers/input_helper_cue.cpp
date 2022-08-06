@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "StdAfx.h"
 #include "input_helper_cue.h"
 #include "../SDK/mem_block_container.h"
 

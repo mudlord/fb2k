@@ -85,4 +85,5 @@ public:
 namespace fb2k {
 	//! pfc::splitThread() + async_task_manager::acquire
 	void splitTask( std::function<void ()> );
+    void splitTask( pfc::thread::arg_t const &, std::function<void ()> );
 }

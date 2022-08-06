@@ -11,6 +11,9 @@ namespace fb2k {
 	void inMainThread(std::function<void() > f);
 	//! Call f synchronously if called from main thread, queue call if called from another.
 	void inMainThread2(std::function<void() > f);
+
+	//! Synchronous version.
+	void inMainThreadSynchronous(std::function<void() > f, abort_callback & abort);
 }
 
 

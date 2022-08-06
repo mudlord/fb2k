@@ -145,7 +145,7 @@ CoInitializeScope::~CoInitializeScope() {
 
 void winLocalFileScope::open(const char * inPath, file::ptr inReader, abort_callback & aborter) {
 	close();
-	if (inPath != NULL) {
+	if (inPath != nullptr) {
 		if (_extract_native_path_ptr(inPath)) {
 			pfc::string8 prefixed;
 			pfc::winPrefixPath(prefixed, inPath);
@@ -155,9 +155,13 @@ void winLocalFileScope::open(const char * inPath, file::ptr inReader, abort_call
 		}
 	}
 
-	pfc::string8 tempPath;
+	pfc::string8 tempPath; tempPath.prealloc(1024);
 	if (!uGetTempPath(tempPath)) uBugCheck();
-	tempPath.add_filename(PFC_string_formatter() << pfc::print_guid(pfc::createGUID()) << ".rar");
+	tempPath.add_filename(PFC_string_formatter() << pfc::print_guid(pfc::createGUID()) );
+	if ( inPath != nullptr ) {
+		auto ext = pfc::string_extension(inPath);
+		if (ext.length() > 0) tempPath << "." << ext;
+	}
 
 	m_path = pfc::stringcvt::string_wide_from_utf8(tempPath);
 

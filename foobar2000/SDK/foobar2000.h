@@ -5,15 +5,20 @@
 
 #include "foobar2000-winver.h"
 
-// #define FOOBAR2000_TARGET_VERSION 75 // 0.9.6
-// #define FOOBAR2000_TARGET_VERSION 76 // 1.0
-// #define FOOBAR2000_TARGET_VERSION 77 // 1.1, 1.2
-// #define FOOBAR2000_TARGET_VERSION 78 // 1.3
-#define FOOBAR2000_TARGET_VERSION 79 // 1.4
-// #define FOOBAR2000_TARGET_VERSION 80 // 1.5, 1.6
+// This SDK does NOT SUPPORT targets older than API 81 / foobar2000 v2.0
+// Use a 1.x series SDK if you wish to target older
+#define FOOBAR2000_TARGET_VERSION 81 // 2.0
+
+#ifdef _M_IX86
+#define FOOBAR2000_TARGET_VERSION_COMPATIBLE 72
+#else
+// x64 & ARM64 targets
+// Allow components made with new foobar2000 v1.6 SDK with x64 & ARM64 targets
+#define FOOBAR2000_TARGET_VERSION_COMPATIBLE 80
+#endif
 
 // Use this to determine what foobar2000 SDK version is in use, undefined for releases older than 2018
-#define FOOBAR2000_SDK_VERSION 20210223
+#define FOOBAR2000_SDK_VERSION 20220617
 
 
 #include "foobar2000-pfc.h"
@@ -37,6 +42,8 @@ typedef const char * pcchar;
 #include "service_by_guid.h"
 #include "service_compat.h"
 
+#include "forward_types.h"
+
 #include "completion_notify.h"
 #include "abort_callback.h"
 #include "componentversion.h"
@@ -46,7 +53,6 @@ typedef const char * pcchar;
 #include "filesystem_transacted.h"
 #include "archive.h"
 #include "audio_chunk.h"
-#include "cfg_var.h"
 #include "mem_block_container.h"
 #include "audio_postprocessor.h"
 #include "playable_location.h"
@@ -55,6 +61,9 @@ typedef const char * pcchar;
 #include "hasher_md5.h"
 #include "metadb_handle.h"
 #include "metadb.h"
+#include "metadb_index.h"
+#include "metadb_display_field_provider.h"
+#include "metadb_callbacks.h"
 #include "file_info_filter.h"
 #include "console.h"
 #include "dsp.h"
@@ -63,7 +72,6 @@ typedef const char * pcchar;
 #include "event_logger.h"
 #include "input.h"
 #include "input_impl.h"
-#include "decode_postprocessor.h"
 #include "menu.h"
 #include "contextmenu.h"
 #include "contextmenu_manager.h"
@@ -79,52 +87,41 @@ typedef const char * pcchar;
 #include "titleformat.h"
 #include "ui.h"
 #include "unpack.h"
-#include "vis.h"
 #include "packet_decoder.h"
 #include "commandline.h"
 #include "genrand.h"
 #include "file_operation_callback.h"
 #include "library_manager.h"
+#include "library_callbacks.h"
 #include "config_io_callback.h"
 #include "popup_message.h"
 #include "app_close_blocker.h"
 #include "config_object.h"
-#include "config_object_impl.h"
 #include "threaded_process.h"
-#include "message_loop.h"
 #include "input_file_type.h"
-#include "chapterizer.h"
-#include "link_resolver.h"
 #include "main_thread_callback.h"
 #include "advconfig.h"
-#include "info_lookup_handler.h"
 #include "track_property.h"
 
 #include "album_art.h"
 #include "album_art_helpers.h"
 #include "icon_remap.h"
-#include "ui_element.h"
-#include "ole_interaction.h"
 #include "search_tools.h"
 #include "autoplaylist.h"
 #include "replaygain_scanner.h"
-#include "ui_edit_context.h"
 
 #include "system_time_keeper.h"
-#include "playback_stream_capture.h"
 #include "http_client.h"
 #include "exceptions.h"
 
 #include "progress_meter.h"
 
-#include "output.h"
-
-#include "file_format_sanitizer.h"
-
 #include "commonObjects.h"
 
 #include "file_lock_manager.h"
-#include "imageLoaderLite.h"
-#include "imageViewer.h"
+
+#include "configStore.h"
+
+#include "timer.h"
 
 #endif //_FOOBAR2000_H_

@@ -1,5 +1,5 @@
 #include "foobar2000.h"
-
+#include <pfc/unicode-normalize.h>
 #ifndef _MSC_VER
 #define strcat_s strcat
 #define _atoi64 atoll
@@ -414,7 +414,17 @@ void file_info::info_calculate_bitrate(t_filesize p_filesize,double p_length)
 	if ( b > 0 ) info_set_bitrate(b);
 }
 
+bool file_info::is_encoding_float() const {
+	auto bs = info_get_int("bitspersample");
+	auto extra = info_get("bitspersample_extra");
+	if (bs == 32 || bs == 64) {
+		if (extra == nullptr || strcmp(extra, "floating-point") == 0) return true;
+	}
+	return false;
+}
+
 bool file_info::is_encoding_overkill() const {
+#if audio_sample_size == 32
 	auto bs = info_get_int("bitspersample");
 	auto extra = info_get("bitspersample_extra");
 	if ( bs <= 24 ) return false; // fixedpoint up to 24bit, OK
@@ -423,7 +433,7 @@ bool file_info::is_encoding_overkill() const {
 	if ( extra != nullptr ) {
 		if (strcmp(extra, "fixed-point") == 0) return true; // int32, overkill
 	}
-
+#endif
 	return false;
 }
 
@@ -521,6 +531,23 @@ bool file_info::g_is_info_equal(const file_info & p_item1,const file_info & p_it
 	return true;
 }
 
+bool file_info::g_is_meta_subset_debug(const file_info& superset, const file_info& subset) {
+	size_t total = subset.meta_get_count();
+	bool rv = true;
+	for (size_t walk = 0; walk < total; ++walk) {
+		const char* name = subset.meta_enum_name(walk);
+		const size_t idx = superset.meta_find(name);
+		if (idx == SIZE_MAX) {
+			rv = false;
+			FB2K_console_formatter() << "Field " << name << " missing";
+		} else if (!field_value_equals(superset, idx, subset, walk)) {
+			rv = false;
+			FB2K_console_formatter() << "Field " << name << " mismatch";
+		}
+	}
+	return rv;
+}
+
 static bool is_valid_field_name_char(char p_char) {
 	return p_char >= 32 && p_char < 127 && p_char != '=' && p_char != '%' && p_char != '<' && p_char != '>';
 }
@@ -578,6 +605,7 @@ void file_info::info_set_wfx_chanMask(uint32_t val) {
 	case 0:
 	case 4:
 	case 3:
+		this->info_remove("WAVEFORMATEXTENSIBLE_CHANNEL_MASK");
 		break;
 	default:
 		info_set ("WAVEFORMATEXTENSIBLE_CHANNEL_MASK", PFC_string_formatter() << "0x" << pfc::format_hex(val) );
@@ -756,6 +784,16 @@ void file_info::from_mem( const void * memPtr, size_t memSize ) {
 	}
 }
 
+void file_info::set_audio_chunk_spec(audio_chunk::spec_t s) {
+	this->info_set_int("samplerate", s.sampleRate);
+	this->info_set_int("channels", s.chanCount);
+	uint32_t mask = 0;
+	if (audio_chunk::g_count_channels(s.chanMask) == s.chanCount) {
+		mask = s.chanMask;
+	}
+	this->info_set_wfx_chanMask(mask); // clears if zero or  one of trivial values
+}
+
 audio_chunk::spec_t file_info::audio_chunk_spec() const 
 {
 	audio_chunk::spec_t rv = {};
@@ -766,4 +804,33 @@ audio_chunk::spec_t file_info::audio_chunk_spec() const
 		rv.chanMask = audio_chunk::g_guess_channel_config( rv.chanCount );
 	}
 	return rv;
+}
+
+bool file_info::field_value_equals(const file_info& i1, size_t meta1, const file_info& i2, size_t meta2) {
+	const size_t c = i1.meta_enum_value_count(meta1);
+	if (c != i2.meta_enum_value_count(meta2)) return false;
+	for (size_t walk = 0; walk < c; ++walk) {
+		if (strcmp(i1.meta_enum_value(meta1, walk), i2.meta_enum_value(meta2, walk)) != 0) return false;
+	}
+	return true;
+}
+
+bool file_info::unicode_normalize_C() {
+	const size_t total = this->meta_get_count();
+	bool changed = false;
+	for (size_t mwalk = 0; mwalk < total; ++mwalk) {
+		const char* name = this->meta_enum_name(mwalk);
+		const size_t totalV = this->meta_enum_value_count(mwalk);
+		for (size_t vwalk = 0; vwalk < totalV; ++vwalk) {
+			const char* val = this->meta_enum_value(mwalk, vwalk);
+			if (pfc::stringContainsFormD(val)) {
+				auto norm = pfc::unicodeNormalizeC(val);
+				if (strcmp(norm, val) != 0) {
+					this->meta_modify_value(mwalk, vwalk, norm);
+					changed = true;
+				}
+			}
+		}
+	}
+	return changed;
 }

@@ -1,34 +1,11 @@
 #pragma once
 
 #include <functional>
+#include "commonObjects.h"
 
-//! Common class for handling picture data. \n
-//! Type of contained picture data is unknown and to be determined according to memory block contents by code parsing/rendering the picture. Commonly encountered types are: BMP, PNG, JPEG and GIF. \n
-//! Implementation: use album_art_data_impl.
-class NOVTABLE album_art_data : public service_base {
-public:
-	//! Retrieves a pointer to a memory block containing the picture.
-	virtual const void * get_ptr() const = 0;
-	//! Retrieves size of the memory block containing the picture.
-	virtual t_size get_size() const = 0;
-
-	//! Determine whether two album_art_data objects store the same picture data.
-	static bool equals(album_art_data const & v1, album_art_data const & v2) {
-		const t_size s = v1.get_size();
-		if (s != v2.get_size()) return false;
-		return memcmp(v1.get_ptr(), v2.get_ptr(),s) == 0;
-	}
-	bool operator==(const album_art_data & other) const {return equals(*this,other);}
-	bool operator!=(const album_art_data & other) const {return !equals(*this,other);}
-
-	FB2K_MAKE_SERVICE_INTERFACE(album_art_data,service_base);
-};
-
-typedef service_ptr_t<album_art_data> album_art_data_ptr;
 namespace fb2k {
-	typedef album_art_data_ptr memBlockRef;
+    class image;
 }
-
 //! Namespace containing identifiers of album art types.
 namespace album_art_ids {
 	//! Front cover.
@@ -66,6 +43,10 @@ public:
 
 	bool have_entry( const GUID & what, abort_callback & abort );
 	bool query(const GUID & what, album_art_data::ptr & out, abort_callback & abort);
+    
+    //! Future compatiblity, load directly to fb2k::image
+    //! Might be eventually specialized for operating system supported formats
+    service_ptr_t<fb2k::image> query_image_(const GUID &, abort_callback&);
 };
 
 //! Class encapsulating access to album art stored in a media file. Use album_art_editor class to obtain album_art_editor_instance referring to specified media file.
@@ -181,6 +162,9 @@ class NOVTABLE album_art_path_list : public service_base {
 public:
 	virtual const char * get_path(t_size index) const = 0;
 	virtual t_size get_count() const = 0;
+
+	static bool equals(album_art_path_list const& v1, album_art_path_list const& v2);
+	static bool equals(ptr const& v1, ptr const& v2);
 };
 
 //! album_art_extractor_instance extension; lets the frontend query referenced file paths (eg. when using external album art).
@@ -257,4 +241,25 @@ public:
 
 	//! Helper; register a lambda notification. Pass the returned obejct to remove() to unregister.
 	now_playing_album_art_notify* add( std::function<void (album_art_data::ptr) > );
+};
+
+//! \since 1.6.6
+class NOVTABLE now_playing_album_art_notify_manager_v2 : public now_playing_album_art_notify_manager {
+	FB2K_MAKE_SERVICE_COREAPI_EXTENSION(now_playing_album_art_notify_manager_v2, now_playing_album_art_notify_manager);
+public:
+	struct info_t {
+		album_art_data::ptr data;
+		album_art_path_list::ptr paths;
+
+		static bool equals(const info_t& v1, const info_t& v2) {
+			return album_art_data::equals(v1.data, v2.data) && album_art_path_list::equals(v1.paths, v2.paths);
+		}
+		bool operator==(const info_t& other) const { return equals(*this, other); }
+		bool operator!=(const info_t& other) const { return !equals(*this, other); }
+
+		void clear() { *this = {}; }
+		bool is_valid() const { return data.is_valid(); }
+		operator bool() const { return is_valid(); }
+	};
+	virtual info_t current_v2() = 0;
 };
