@@ -4,7 +4,8 @@
 #include <memory>
 
 #include "track_property_callback_impl.h"
-#include "../SDK/threadPool.h"
+#include <SDK/threadPool.h>
+#include <SDK/track_property.h>
 
 void track_property_callback_impl::set_property(const char * p_group, double p_sortpriority, const char * p_name, const char * p_value) {
 	propertyname_container temp;

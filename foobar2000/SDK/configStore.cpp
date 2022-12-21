@@ -1,4 +1,4 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
 #include "configStore.h"
 #ifdef FOOBAR2000_MOBILE
 #include "appearance.h"

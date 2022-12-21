@@ -1,6 +1,9 @@
 #pragma once
 
+#define FOOBAR2000_HAVE_CONFIGSTORE FOOBAR2020
+
 #include <functional>
+#include "commonObjects.h"
 
 namespace fb2k {
 

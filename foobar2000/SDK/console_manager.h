@@ -1,4 +1,5 @@
 #pragma once
+#include "commonObjects.h"
 
 namespace fb2k {
 	//! \since 2.0

@@ -1,12 +1,49 @@
 #include "../helpers/foobar2000+atl.h"
+#include <coreDarkMode.h>
 #include "../../libPPUI/win32_utility.h"
 #include "../../libPPUI/win32_op.h" // WIN32_OP()
+#include "../SDK/ui_element.h"
 #include "../helpers/BumpableElem.h"
+#include "../../libPPUI/CDialogResizeHelper.h"
 #include "resource.h"
 #include "wahwah.h"
 #include "dsp_guids.h"
 
 namespace {
+
+	static double clamp_ml(double x, double upper, double lower)
+	{
+		return min(upper, max(x, lower));
+	}
+
+	class CEditMod : public CWindowImpl<CEditMod, CEdit >
+	{
+	public:
+		BEGIN_MSG_MAP(CEditMod)
+			MESSAGE_HANDLER(WM_CHAR, OnChar)
+		END_MSG_MAP()
+
+		CEditMod(HWND hWnd = NULL) { }
+		LRESULT OnChar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+		{
+			switch (wParam)
+			{
+			case '\r': //Carriage return
+				::PostMessage(m_parent, WM_USER, 0x1988, 0L);
+				return 0;
+				break;
+			}
+			return DefWindowProc(uMsg, wParam, lParam);
+		}
+		void AttachToDlgItem(HWND parent)
+		{
+			m_parent = parent;
+		}
+	private:
+		UINT m_dlgItem;
+		HWND m_parent;
+	};
+
 	static void RunConfigPopup(const dsp_preset & p_data, HWND p_parent, dsp_preset_edit_callback & p_callback);
 	class dsp_wahwah : public dsp_impl_base
 	{
@@ -131,11 +168,40 @@ namespace {
 	static const GUID guid_choruselem =
 	{ 0xf7d39b6, 0x43f, 0x4e5c,{ 0x8d, 0x5a, 0xa5, 0x3f, 0x42, 0xb6, 0xf, 0xcc } };
 
+	static const CDialogResizeHelper::Param chorus_uiresize[] = {
+		// Dialog resize handling matrix, defines how the controls scale with the dialog
+		//			 L T R B
+		{IDC_STATIC1, 0,0,0,0  },
+		{IDC_STATIC2, 0,0,0,0  },
+		{IDC_STATIC3, 0,0,0,0  },
+		{IDC_STATIC4, 0,0,0,0  },
+		{IDC_STATIC5, 0,0,0,0  },
+		{IDC_EDITWAHFREQUI, 0,0,0,0  },
+		{IDC_EDITWAHPHASEUI, 0,0,0,0  },
+		{IDC_EDITWAHDEPTHUI,    0,0,0,0 },
+		{IDC_EDITWAHOFFUI,    0,0,0,0  },
+		{IDC_EDITWAHRESUI, 0,0,0,0 },
+		{IDC_WAHENABLED,  0,0,0,0 },
+	{IDC_RESETCHR5,0,0,0,0 },
+	{IDC_WAHLFOFREQ1, 0,0,1,0},
+	{IDC_WAHLFOSTARTPHASE1, 0,0,1,0},
+	{IDC_WAHFREQOFFSET1, 0,0,1,0},
+	{IDC_WAHDEPTH1, 0,0,1,0},
+	{IDC_WAHRESONANCE1, 0,0,1,0},
+	// current position of a control is determined by initial_position + factor * (current_dialog_size - initial_dialog_size)
+	// where factor is the value from the table above
+	// applied to all four values - left, top, right, bottom
+	// 0,0,0,0 means that a control doesn't react to dialog resizing (aligned to top+left, no resize)
+	// 1,1,1,1 means that the control is aligned to bottom+right but doesn't resize
+	// 0,0,1,0 means that the control disregards vertical resize (aligned to top) and changes its width with the dialog
+	};
+	static const CRect resizeMinMax(200, 160, 1000, 1000);
+
 
 
 	class uielem_wah : public CDialogImpl<uielem_wah>, public ui_element_instance {
 	public:
-		uielem_wah(ui_element_config::ptr cfg, ui_element_instance_callback::ptr cb) : m_callback(cb) {
+		uielem_wah(ui_element_config::ptr cfg, ui_element_instance_callback::ptr cb) : m_callback(cb), m_resizer(chorus_uiresize, resizeMinMax) {
 			freq = 1.5; depth = 0.70; startphase = 0.0; freqofs = 0.3; res = 2.5; wah_enabled = true;
 
 		}
@@ -160,9 +226,12 @@ namespace {
 			FrequencyOffsetTotal = 100
 		};
 		BEGIN_MSG_MAP(uielem_wah)
+			CHAIN_MSG_MAP_MEMBER(m_resizer)
 			MSG_WM_INITDIALOG(OnInitDialog)
 			COMMAND_HANDLER_EX(IDC_WAHENABLED, BN_CLICKED, OnEnabledToggle)
 			MSG_WM_HSCROLL(OnScroll)
+			MESSAGE_HANDLER(WM_USER, OnEditControlChange)
+			COMMAND_HANDLER_EX(IDC_RESETCHR5, BN_CLICKED, OnReset5)
 		END_MSG_MAP()
 
 
@@ -201,10 +270,10 @@ namespace {
 			}
 
 
-			ret.m_min_width = MulDiv(380, DPI.cx, 96);
-			ret.m_min_height = MulDiv(260, DPI.cy, 96);
-			ret.m_max_width = MulDiv(380, DPI.cx, 96);
-			ret.m_max_height = MulDiv(260, DPI.cy, 96);
+			ret.m_min_width = MulDiv(200, DPI.cx, 96);
+			ret.m_min_height = MulDiv(160, DPI.cy, 96);
+			ret.m_max_width = MulDiv(1000, DPI.cx, 96);
+			ret.m_max_height = MulDiv(1000, DPI.cy, 96);
 
 			// Deal with WS_EX_STATICEDGE and alike that we might have picked from host
 			ret.adjustForWindow(*this);
@@ -213,6 +282,31 @@ namespace {
 		}
 
 	private:
+
+
+		void OnReset5(UINT, int id, CWindow)
+		{
+			freq = 1.5; depth = 0.70; startphase = 0.0; freqofs = 0.3; res = 2.5;
+			slider_freq.SetPos((double)(10 * freq));
+			slider_startphase.SetPos((double)(100 * startphase));
+			slider_freqofs.SetPos((double)(100 * freqofs));
+			slider_depth.SetPos((double)(100 * depth));
+			slider_res.SetPos((double)(100 * res));
+			RefreshLabel(freq, depth, startphase, freqofs, res);
+			OnConfigChanged();
+		}
+
+
+		LRESULT OnEditControlChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+		{
+			if (wParam == 0x1988)
+			{
+				GetEditText();
+			}
+			return 0;
+		}
+
+		fb2k::CCoreDarkModeHooks m_hooks;
 		void SetWahEnabled(bool state) { m_buttonWahEnabled.SetCheck(state ? BST_CHECKED : BST_UNCHECKED); }
 		bool IsWahEnabled() { return m_buttonWahEnabled == NULL || m_buttonWahEnabled.GetCheck() == BST_CHECKED; }
 
@@ -299,6 +393,62 @@ namespace {
 
 		}
 
+		void GetEditText()
+		{
+			bool preset_changed = false;
+			CString text;
+			freqofs_edit.GetWindowText(text);
+			float freqofs2 = pfc::clip_t<t_float32>(_ttoi(text), FrequencyOffsetMin, FrequencyOffsetMax) / FrequencyOffsetMax;
+			if (freqofs_s != text)
+			{
+				freqofs = freqofs2;
+				preset_changed = true;
+			}
+
+			res_edit.GetWindowText(text);
+			float res2 = pfc::clip_t<t_float32>(_ttoi(text), ResonanceMin, ResonanceMax) /10.0;
+			if (res_s != text)
+			{
+				res = res2;
+				preset_changed = true;
+			}
+
+			freq_edit.GetWindowText(text);
+			float freq2 = pfc::clip_t<t_float32>(_ttoi(text), FreqMin, FreqMax) / 10.0;
+			if (freq_s != text)
+			{
+				freq = freq2;
+				preset_changed = true;
+			}
+
+			depth_edit.GetWindowText(text);
+			float depth2 = pfc::clip_t<t_float32>(_ttoi(text), 0, DepthMax) / 100.0;
+			if (depth_s != text)
+			{
+				depth = depth2;
+				preset_changed = true;
+			}
+
+			startphase_edit.GetWindowText(text);
+			float startphase2 = pfc::clip_t<t_int32>(_ttoi(text), 0, StartPhaseMax) / 100.0;
+			if (startphase_s != text)
+			{
+				startphase = startphase2;
+				preset_changed = true;
+			}
+
+			if (preset_changed)
+			{
+				slider_freq.SetPos((double)(10 * freq));
+				slider_startphase.SetPos((double)(100 * startphase));
+				slider_freqofs.SetPos((double)(100 * freqofs));
+				slider_depth.SetPos((double)(100 * depth));
+				slider_res.SetPos((double)(100 * res));
+				RefreshLabel(freq, depth, startphase, freqofs, res);
+				OnConfigChanged();
+			}
+		}
+
 
 		void GetConfig()
 		{
@@ -306,7 +456,7 @@ namespace {
 			depth = slider_depth.GetPos() / 100.0;
 			startphase = slider_startphase.GetPos() / 100.0;
 			freqofs = slider_freqofs.GetPos() / 100.0;
-			res = slider_res.GetPos() / 10.0;
+			res = slider_res.GetPos() / 100.0;
 			wah_enabled = IsWahEnabled();
 			RefreshLabel(freq, depth, startphase, freqofs, res);
 		}
@@ -317,7 +467,7 @@ namespace {
 			slider_startphase.SetPos((double)(100 * startphase));
 			slider_freqofs.SetPos((double)(100 * freqofs));
 			slider_depth.SetPos((double)(100 * depth));
-			slider_res.SetPos((double)(10 * res));
+			slider_res.SetPos((double)(100 * res));
 
 			RefreshLabel(freq, depth, startphase, freqofs, res);
 
@@ -336,35 +486,51 @@ namespace {
 			slider_res = GetDlgItem(IDC_WAHRESONANCE1);
 			slider_res.SetRange(0, 100);
 
+			freq_edit.AttachToDlgItem(m_hWnd);
+			freq_edit.SubclassWindow(GetDlgItem(IDC_EDITWAHFREQUI));
+			startphase_edit.AttachToDlgItem(m_hWnd);
+			startphase_edit.SubclassWindow(GetDlgItem(IDC_EDITWAHPHASEUI));
+			freqofs_edit.AttachToDlgItem(m_hWnd);
+			freqofs_edit.SubclassWindow(GetDlgItem(IDC_EDITWAHOFFUI));
+			depth_edit.AttachToDlgItem(m_hWnd);
+			depth_edit.SubclassWindow(GetDlgItem(IDC_EDITWAHDEPTHUI));
+			res_edit.AttachToDlgItem(m_hWnd);
+			res_edit.SubclassWindow(GetDlgItem(IDC_EDITWAHRESUI));
+
 			m_buttonWahEnabled = GetDlgItem(IDC_WAHENABLED);
 			m_ownWahUpdate = false;
 
 			ApplySettings();
+			m_hooks.AddDialogWithControls(m_hWnd);
 			return TRUE;
 		}
 
 		void RefreshLabel(float freq, float depth, float startphase, float freqofs, float res)
 		{
 			pfc::string_formatter msg;
-			msg << "LFO Frequency: ";
-			msg << pfc::format_float(freq, 0, 1) << " Hz";
-			::uSetDlgItemText(*this, IDC_WAHLFOFREQINFO1, msg);
+			msg << pfc::format_float(freq, 0, 1);
+			freq_s = msg.c_str();
+			freq_edit.SetWindowText(freq_s);
 			msg.reset();
-			msg << "Depth: ";
-			msg << pfc::format_int(depth * 100) << "%";
-			::uSetDlgItemText(*this, IDC_WAHDEPTHINFO1, msg);
+
+			msg << pfc::format_int(depth * 100);
+			depth_s = msg.c_str();
+		    depth_edit.SetWindowText(depth_s);
 			msg.reset();
-			msg << "LFO Starting Phase: ";
-			msg << pfc::format_int(startphase * 100) << " (deg.)";
-			::uSetDlgItemText(*this, IDC_WAHLFOPHASEINFO1, msg);
+
+			msg << pfc::format_int(startphase * 100);
+			startphase_s = msg.c_str();
+			startphase_edit.SetWindowText(startphase_s);
 			msg.reset();
-			msg << "Wah Frequency Offset: ";
-			msg << pfc::format_int(freqofs * 100) << "%";
-			::uSetDlgItemText(*this, IDC_WAHFREQOFFSETINFO1, msg);
+
+			msg << pfc::format_int(freqofs * 100);
+			freqofs_s = msg.c_str();
+			freqofs_edit.SetWindowText(freqofs_s);
 			msg.reset();
-			msg << "Resonance: ";
-			msg << pfc::format_float(res, 0, 1) << "";
-			::uSetDlgItemText(*this, IDC_WAHRESONANCEINFO1, msg);
+
+			msg << pfc::format_int(res*100);
+			res_s = msg.c_str();
+			res_edit.SetWindowText(res_s);
 			msg.reset();
 		}
 
@@ -372,9 +538,12 @@ namespace {
 		float freq;
 		float depth, startphase;
 		float freqofs, res;
+		CEditMod freq_edit, startphase_edit, freqofs_edit, depth_edit, res_edit;
+		CString freq_s, startphase_s, freqofs_s, depth_s, res_s;
 		CTrackBarCtrl slider_freq, slider_startphase, slider_freqofs, slider_depth, slider_res;
 		CButton m_buttonWahEnabled;
 		bool m_ownWahUpdate;
+		CDialogResizeHelper m_resizer;
 
 		static uint32_t parseConfig(ui_element_config::ptr cfg) {
 			return 1;
@@ -397,7 +566,7 @@ namespace {
 		uint32_t shit;
 	protected:
 		const ui_element_instance_callback::ptr m_callback;
-	};
+};
 
 	class myElem_t : public  ui_element_impl_withpopup< uielem_wah > {
 		bool get_element_group(pfc::string_base & p_out)
@@ -408,6 +577,13 @@ namespace {
 
 		bool get_menu_command_description(pfc::string_base & out) {
 			out = "Opens a window for wah control.";
+			return true;
+		}
+
+		bool get_popup_specs(ui_size& defSize, pfc::string_base& title)
+		{
+			defSize = { 200,160 };
+			title = "Wah DSP";
 			return true;
 		}
 
@@ -444,9 +620,36 @@ namespace {
 			COMMAND_HANDLER_EX(IDOK, BN_CLICKED, OnButton)
 			COMMAND_HANDLER_EX(IDCANCEL, BN_CLICKED, OnButton)
 			MSG_WM_HSCROLL(OnHScroll)
+			MESSAGE_HANDLER(WM_USER, OnEditControlChange)
+			COMMAND_HANDLER_EX(IDC_RESETCHR6, BN_CLICKED, OnReset5)
 		END_MSG_MAP()
 
 	private:
+
+		void OnReset5(UINT, int id, CWindow)
+		{
+			freq = 1.5; depth = 0.70; startphase = 0.0; freqofs = 0.3; res = 2.5;
+			slider_freq.SetPos((double)(10 * freq));
+			slider_startphase.SetPos((double)(100 * startphase));
+			slider_freqofs.SetPos((double)(100 * freqofs));
+			slider_depth.SetPos((double)(100 * depth));
+			slider_res.SetPos((double)(100 * res));
+			RefreshLabel(freq, depth, startphase, freqofs, res);
+			dsp_preset_impl preset;
+			dsp_wahwah::make_preset(freq, depth, startphase, freqofs, res, true, preset);
+			m_callback.on_preset_changed(preset);
+		}
+
+		LRESULT OnEditControlChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+		{
+			if (wParam == 0x1988)
+			{
+				GetEditText();
+			}
+			return 0;
+		}
+
+		fb2k::CCoreDarkModeHooks m_hooks;
 		void DSPConfigChange(dsp_chain_config const & cfg)
 		{
 			if (m_hWnd != NULL) {
@@ -465,7 +668,7 @@ namespace {
 				slider_startphase.SetPos((double)(100 * startphase));
 				slider_freqofs.SetPos((double)(100 * freqofs));
 				slider_depth.SetPos((double)(100 * depth));
-				slider_res.SetPos((double)(10 * res));
+				slider_res.SetPos((double)(100 * res));
 
 				RefreshLabel(freq, depth, startphase, freqofs, res);
 			}
@@ -484,6 +687,17 @@ namespace {
 			slider_res = GetDlgItem(IDC_WAHRESONANCE);
 			slider_res.SetRange(0, 100);
 
+			freq_edit.AttachToDlgItem(m_hWnd);
+			freq_edit.SubclassWindow(GetDlgItem(IDC_EDITWAHFREQ));
+			startphase_edit.AttachToDlgItem(m_hWnd);
+			startphase_edit.SubclassWindow(GetDlgItem(IDC_EDITWAHPHASE));
+			freqofs_edit.AttachToDlgItem(m_hWnd);
+			freqofs_edit.SubclassWindow(GetDlgItem(IDC_EDITWAHOFF));
+			depth_edit.AttachToDlgItem(m_hWnd);
+			depth_edit.SubclassWindow(GetDlgItem(IDC_EDITWAHDEPTH));
+			res_edit.AttachToDlgItem(m_hWnd);
+			res_edit.SubclassWindow(GetDlgItem(IDC_EDITWAHRES));
+
 			{
 				bool enabled;
 				dsp_wahwah::parse_preset(freq, depth, startphase, freqofs, res, enabled, m_initData);
@@ -492,12 +706,13 @@ namespace {
 				slider_startphase.SetPos((double)(100 * startphase));
 				slider_freqofs.SetPos((double)(100 * freqofs));
 				slider_depth.SetPos((double)(100 * depth));
-				slider_res.SetPos((double)(10 * res));
+				slider_res.SetPos((double)(100 * res));
 
 				RefreshLabel(freq, depth, startphase, freqofs, res);
 
 
 			}
+			m_hooks.AddDialogWithControls(m_hWnd);
 			return TRUE;
 		}
 
@@ -523,28 +738,91 @@ namespace {
 
 		}
 
+
+		void GetEditText()
+		{
+			bool preset_changed = false;
+			CString text;
+			freqofs_edit.GetWindowText(text);
+			float freqofs2 = pfc::clip_t<t_float32>(_ttoi(text), FrequencyOffsetMin, FrequencyOffsetMax) / FrequencyOffsetMax;
+			if (freqofs_s != text)
+			{
+				freqofs = freqofs2;
+				preset_changed = true;
+			}
+
+			res_edit.GetWindowText(text);
+			float res2 = pfc::clip_t<t_float32>(_ttoi(text), ResonanceMin, ResonanceMax) / 10.0;
+			if (res_s != text)
+			{
+				res = res2;
+				preset_changed = true;
+			}
+
+			freq_edit.GetWindowText(text);
+			float freq2 = pfc::clip_t<t_float32>(_ttoi(text), FreqMin, FreqMax) / 10.0;
+			if (freq_s != text)
+			{
+				freq = freq2;
+				preset_changed = true;
+			}
+
+			depth_edit.GetWindowText(text);
+			float depth2 = pfc::clip_t<t_float32>(_ttoi(text), 0, DepthMax) / 100.0;
+			if (depth_s != text)
+			{
+				depth = depth2;
+				preset_changed = true;
+			}
+
+			startphase_edit.GetWindowText(text);
+			float startphase2 = pfc::clip_t<t_int32>(_ttoi(text), 0, StartPhaseMax) / 100.0;
+			if (startphase_s != text)
+			{
+				startphase = startphase2;
+				preset_changed = true;
+			}
+
+			if (preset_changed)
+			{
+				slider_freq.SetPos((double)(10 * freq));
+				slider_startphase.SetPos((double)(100 * startphase));
+				slider_freqofs.SetPos((double)(100 * freqofs));
+				slider_depth.SetPos((double)(100 * depth));
+				slider_res.SetPos((double)(100 * res));
+				RefreshLabel(freq, depth, startphase, freqofs, res);
+				dsp_preset_impl preset;
+				dsp_wahwah::make_preset(freq, depth, startphase, freqofs, res, true, preset);
+				m_callback.on_preset_changed(preset);
+			}
+		}
+
 		void RefreshLabel(float freq, float depth, float startphase, float freqofs, float res)
 		{
 			pfc::string_formatter msg;
-			msg << "LFO Frequency: ";
-			msg << pfc::format_float(freq, 0, 1) << " Hz";
-			::uSetDlgItemText(*this, IDC_WAHLFOFREQINFO, msg);
+			msg << pfc::format_float(freq, 0, 1);
+			freq_s = msg.c_str();
+			freq_edit.SetWindowText(freq_s);
 			msg.reset();
-			msg << "Depth: ";
-			msg << pfc::format_int(depth * 100) << "%";
-			::uSetDlgItemText(*this, IDC_WAHDEPTHINFO, msg);
+
+			msg << pfc::format_int(depth * 100);
+			depth_s = msg.c_str();
+			depth_edit.SetWindowText(depth_s);
 			msg.reset();
-			msg << "LFO Starting Phase: ";
-			msg << pfc::format_int(startphase * 100) << " (deg.)";
-			::uSetDlgItemText(*this, IDC_WAHLFOPHASEINFO, msg);
+
+			msg << pfc::format_int(startphase * 100);
+			startphase_s = msg.c_str();
+			startphase_edit.SetWindowText(startphase_s);
 			msg.reset();
-			msg << "Wah Frequency Offset: ";
-			msg << pfc::format_int(freqofs * 100) << "%";
-			::uSetDlgItemText(*this, IDC_WAHFREQOFFSETINFO, msg);
+
+			msg << pfc::format_int(freqofs * 100);
+			freqofs_s = msg.c_str();
+			freqofs_edit.SetWindowText(freqofs_s);
 			msg.reset();
-			msg << "Resonance: ";
-			msg << pfc::format_float(res, 0, 1) << "";
-			::uSetDlgItemText(*this, IDC_WAHRESONANCEINFO, msg);
+
+			msg << pfc::format_int(res*100);
+			res_s = msg.c_str();
+			res_edit.SetWindowText(res_s);
 			msg.reset();
 		}
 
@@ -553,6 +831,8 @@ namespace {
 		float freq;
 		float depth, startphase;
 		float freqofs, res;
+		CEditMod freq_edit, startphase_edit, freqofs_edit, depth_edit, res_edit;
+		CString freq_s, startphase_s, freqofs_s, depth_s, res_s;
 		CTrackBarCtrl slider_freq, slider_startphase, slider_freqofs, slider_depth, slider_res;
 	};
 

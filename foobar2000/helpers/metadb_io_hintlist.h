@@ -1,6 +1,10 @@
 #pragma once
 
 #include "metadb_info_container_impl.h"
+#include <SDK/input.h>
+#include <SDK/filesystem.h>
+#include <SDK/metadb.h>
+
 
 // Obsolete, use metadb_hint_list instead when possible, wrapper provided for compatibility with old code
 

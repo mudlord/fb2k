@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <SDK/track_property.h>
 
 class groupname_comparator {
 public:

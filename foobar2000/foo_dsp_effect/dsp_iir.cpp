@@ -1,14 +1,16 @@
 #include "../helpers/foobar2000+atl.h"
+#include <coreDarkMode.h>
 #include "../../libPPUI/win32_utility.h"
 #include "../../libPPUI/win32_op.h" // WIN32_OP()
+#include "../SDK/ui_element.h"
 #include "../helpers/BumpableElem.h"
+#include "../../libPPUI/CDialogResizeHelper.h"
 #include "resource.h"
 #include "iirfilters.h"
 #include "dsp_guids.h"
-static double clamp_ml(double x, double upper, double lower)
-{
-	return min(upper, max(x, lower));
-}
+
+
+
 namespace {
 	class CEditMod : public CWindowImpl<CEditMod, CEdit >
 	{
@@ -176,9 +178,11 @@ namespace {
 			COMMAND_HANDLER_EX(IDC_IIRTYPE, CBN_SELCHANGE, OnChange)
 			MSG_WM_HSCROLL(OnScroll)
 			MESSAGE_HANDLER(WM_USER, OnEditControlChange)
+			COMMAND_HANDLER_EX(IDC_RESETCHR6, BN_CLICKED, OnReset5)
 		END_MSG_MAP()
 
 	private:
+		fb2k::CCoreDarkModeHooks m_hooks;
 		LRESULT OnEditControlChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 		{
 			if (wParam == 0x1988)
@@ -188,19 +192,64 @@ namespace {
 			return 0;
 		}
 
+		void OnReset5(UINT, int id, CWindow)
+		{
+			p_freq = 400, p_gain = 10, p_type = 0, p_qual = 0.707;
+
+
+			slider_freq.SetPos(p_freq);
+			slider_gain.SetPos(p_gain * 100);
+			CWindow w = GetDlgItem(IDC_IIRTYPE1);
+			::SendMessage(w, CB_SETCURSEL, p_type, 0);
+			RefreshLabel(p_freq, p_gain, p_type);
+			dsp_preset_impl preset;
+			dsp_iir::make_preset(p_freq, p_gain, p_type, p_qual , true, preset);
+			m_callback.on_preset_changed(preset);
+			RefreshLabel(p_freq, p_gain, p_type);
+		}
+
+
 		void GetEditText()
 		{
-			CString sWindowText;
+			bool changed = false;
+			CString sWindowText, sWindowText2, sWindowText3;
+			freq_edit.GetWindowText(sWindowText3);
+			int freq2 = pfc::clip_t<t_int32>(_ttoi(sWindowText3), 0, FreqMax);
+			if (freq_s != sWindowText3)
+			{
+				p_freq = freq2;
+				changed = true;
+
+			}
 			pitch_edit.GetWindowText(sWindowText);
 			float pitch2 = _ttof(sWindowText);
 			if (pitch_s != sWindowText)
 			{
-			
+				p_qual = pitch2;
+				changed = true;
+			}
+
+			gain_edit.GetWindowText(sWindowText2);
+			float gain2 = pfc::clip_t<t_float32>(_ttof(sWindowText2), -100.00, 100);
+			if (gain_s != sWindowText2)
+			{
+				p_gain = gain2;
+				changed = true;
+			}
+
+			if (changed)
+			{
+				slider_freq.SetPos(p_freq);
+				slider_gain.SetPos(p_gain * 100);
+				CWindow w = GetDlgItem(IDC_IIRTYPE1);
+				::SendMessage(w, CB_SETCURSEL, p_type, 0);
+				RefreshLabel(p_freq, p_gain, p_type);
 				dsp_preset_impl preset;
 				dsp_iir::make_preset(p_freq, p_gain, p_type, pitch2, true, preset);
-				p_qual = pitch2;
 				m_callback.on_preset_changed(preset);
 			}
+			
+
 		}
 
 		void DSPConfigChange(dsp_chain_config const & cfg)
@@ -220,16 +269,11 @@ namespace {
 				slider_gain.SetPos(p_gain);
 				CWindow w = GetDlgItem(IDC_IIRTYPE1);
 				::SendMessage(w, CB_SETCURSEL, p_type, 0);
-				if (p_type == 10)
-				{
-					slider_freq.EnableWindow(FALSE);
-					slider_gain.EnableWindow(FALSE);
-				}
-				else
-				{
-					slider_freq.EnableWindow(TRUE);
-					slider_gain.EnableWindow(TRUE);
-				}
+				BOOL type1 = (p_type != 10);
+				slider_freq.EnableWindow(type1);
+				slider_gain.EnableWindow(type1);
+				freq_edit.EnableWindow(type1);
+				pitch_edit.EnableWindow(type1);
 				RefreshLabel(p_freq, p_gain, p_type);
 			}
 		}
@@ -239,6 +283,10 @@ namespace {
 
 			pitch_edit.AttachToDlgItem(m_hWnd);
 			pitch_edit.SubclassWindow(GetDlgItem(IDC_IIRQ1));
+			freq_edit.AttachToDlgItem(m_hWnd);
+			freq_edit.SubclassWindow(GetDlgItem(IDC_IIRFREQEDIT1));
+			gain_edit.AttachToDlgItem(m_hWnd);
+			gain_edit.SubclassWindow(GetDlgItem(IDC_IIRGAINEDIT1));
 			slider_freq = GetDlgItem(IDC_IIRFREQ);
 			slider_freq.SetRangeMin(0);
 			slider_freq.SetRangeMax(FreqMax);
@@ -248,16 +296,11 @@ namespace {
 
 				bool enabled;
 				dsp_iir::parse_preset(p_freq, p_gain, p_type,p_qual, enabled, m_initData);
-				if (p_type == 10)
-				{
-					slider_freq.EnableWindow(FALSE);
-					slider_gain.EnableWindow(FALSE);
-				}
-				else
-				{
-					slider_freq.EnableWindow(TRUE);
-					slider_gain.EnableWindow(TRUE);
-				}
+				BOOL type1 = (p_type != 10);
+				slider_freq.EnableWindow(type1);
+				slider_gain.EnableWindow(type1);
+				freq_edit.EnableWindow(type1);
+				pitch_edit.EnableWindow(type1);
 
 
 
@@ -280,6 +323,7 @@ namespace {
 				RefreshLabel(p_freq, p_gain, p_type);
 
 			}
+			m_hooks.AddDialogWithControls(m_hWnd);
 			return TRUE;
 		}
 
@@ -300,15 +344,11 @@ namespace {
 				dsp_iir::make_preset(p_freq, p_gain, p_type,p_qual, true, preset);
 				m_callback.on_preset_changed(preset);
 			}
-			if (p_type == 10) {
-				slider_freq.EnableWindow(FALSE);
-				slider_gain.EnableWindow(FALSE);
-			}
-			else
-			{
-				slider_freq.EnableWindow(TRUE);
-				slider_gain.EnableWindow(TRUE);
-			}
+			BOOL type1 = (p_type != 10);
+			slider_freq.EnableWindow(type1);
+			slider_gain.EnableWindow(type1);
+			freq_edit.EnableWindow(type1);
+			gain_edit.EnableWindow(type1);
 			RefreshLabel(p_freq, p_gain, p_type);
 
 		}
@@ -324,43 +364,35 @@ namespace {
 				dsp_iir::make_preset(p_freq, p_gain, p_type,p_qual, true, preset);
 				m_callback.on_preset_changed(preset);
 			}
-			if (p_type == 10) {
-				slider_freq.EnableWindow(FALSE);
-				slider_gain.EnableWindow(FALSE);
-			}
-			else
-			{
-				slider_freq.EnableWindow(TRUE);
-				slider_gain.EnableWindow(TRUE);
-			}
+			BOOL type1 = (p_type != 10);
+			slider_freq.EnableWindow(type1);
+			slider_gain.EnableWindow(type1);
+			freq_edit.EnableWindow(type1);
+			gain_edit.EnableWindow(type1);
 			RefreshLabel(p_freq, p_gain, p_type);
 
 		}
 
 
-		void RefreshLabel(int p_freq, int p_gain, int p_type)
+		void RefreshLabel(int p_freq, float p_gain, int p_type)
 		{
 			pfc::string_formatter msg;
 
 			if (p_type == 10)
-			{
-				msg << "Frequency: disabled";
-				::uSetDlgItemText(*this, IDC_IIRFREQINFO, msg);
-				msg.reset();
-				msg << "Gain: disabled";
-				::uSetDlgItemText(*this, IDC_IIRGAININFO, msg);
 				return;
-
-			}
-			msg << "Frequency: ";
-			msg << pfc::format_int(p_freq) << " Hz";
-			::uSetDlgItemText(*this, IDC_IIRFREQINFO, msg);
 			msg.reset();
-			msg << "Gain: ";
-			msg << pfc::format_float(p_gain, 0, 2) << " db";
-			::uSetDlgItemText(*this, IDC_IIRGAININFO, msg);
+			msg << pfc::format_int(p_freq);
+			CString sWindowText3;
+			sWindowText3 = msg.c_str();
+			freq_s = sWindowText3;
+			freq_edit.SetWindowText(sWindowText3);
 
-			
+			msg.reset();
+			msg << pfc::format_float(p_gain, 0, 2);
+			CString sWindowText2;
+			sWindowText2 = msg.c_str();
+			gain_s = sWindowText2;
+			gain_edit.SetWindowText(sWindowText2);
 
 			msg.reset();
 			msg << pfc::format_float(p_qual, 0, 3);
@@ -373,6 +405,8 @@ namespace {
 		float p_gain;
 		int p_type;
 		float p_qual;
+		CEditMod freq_edit;
+		CString freq_s;
 		CEditMod pitch_edit;
 		CString pitch_s;
 		CEditMod gain_edit;
@@ -401,10 +435,34 @@ namespace {
 	static const GUID guid_choruselem =
 	{ 0xf875c614, 0x439f, 0x4c53,{ 0xb2, 0xef, 0xa6, 0x6e, 0x17, 0x4b, 0xf0, 0x23 } };
 
+	static const CDialogResizeHelper::Param chorus_uiresize[] = {
+		// Dialog resize handling matrix, defines how the controls scale with the dialog
+		//			 L T R B
+		{IDC_STATIC1, 0,0,0,0  },
+		{IDC_STATIC2,    0,0,0,0 },
+		{IDC_STATIC3,    0,0,0,0 },
+		{IDC_STATIC4,    0,0,0,0  },
+		{IDC_IIRENABLED,    0,0,0,0  },
+		{IDC_IIRFREQEDIT2, 0,0,0,0 },
+		{IDC_IIRGAINEDIT,  0,0,0,0 },
+		{IDC_RESETCHR5, 0,0,0,0},
+	{IDC_IIRQ,  0,0,0,0 },
+	{IDC_IIRFREQ1, 0,0,1,0},
+	{IDC_IIRGAIN1, 0,0,1,0},
+	{IDC_IIRTYPE1,0,0,1,0},
+	// current position of a control is determined by initial_position + factor * (current_dialog_size - initial_dialog_size)
+	// where factor is the value from the table above
+	// applied to all four values - left, top, right, bottom
+	// 0,0,0,0 means that a control doesn't react to dialog resizing (aligned to top+left, no resize)
+	// 1,1,1,1 means that the control is aligned to bottom+right but doesn't resize
+	// 0,0,1,0 means that the control disregards vertical resize (aligned to top) and changes its width with the dialog
+	};
+	static const CRect resizeMinMax(220, 120, 1000, 1000);
+
 
 	class uielem_iir : public CDialogImpl<uielem_iir>, public ui_element_instance {
 	public:
-		uielem_iir(ui_element_config::ptr cfg, ui_element_instance_callback::ptr cb) : m_callback(cb) {
+		uielem_iir(ui_element_config::ptr cfg, ui_element_instance_callback::ptr cb) : m_callback(cb),m_resizer(chorus_uiresize, resizeMinMax) {
 			p_freq = 400; p_gain = 10; p_type = 0;
 			p_qual = 0.707;
 			IIR_enabled = true;
@@ -421,10 +479,12 @@ namespace {
 			GainRangeTotal = GainMax - GainMin
 		};
 		BEGIN_MSG_MAP(uielem_iir)
+			CHAIN_MSG_MAP_MEMBER(m_resizer)
 			MSG_WM_INITDIALOG(OnInitDialog)
 			COMMAND_HANDLER_EX(IDC_IIRENABLED, BN_CLICKED, OnEnabledToggle)
 			MSG_WM_HSCROLL(OnScroll)
 			COMMAND_HANDLER_EX(IDC_IIRTYPE1, CBN_SELCHANGE, OnChange1)
+			COMMAND_HANDLER_EX(IDC_RESETCHR5, BN_CLICKED, OnReset5)
 			MESSAGE_HANDLER(WM_USER, OnEditControlChange)
 		END_MSG_MAP()
 
@@ -464,10 +524,10 @@ namespace {
 			}
 
 
-			ret.m_min_width = MulDiv(420, DPI.cx, 96);
-			ret.m_min_height = MulDiv(140, DPI.cy, 96);
-			ret.m_max_width = MulDiv(420, DPI.cx, 96);
-			ret.m_max_height = MulDiv(140, DPI.cy, 96);
+			ret.m_min_width = MulDiv(220, DPI.cx, 96);
+			ret.m_min_height = MulDiv(120, DPI.cy, 96);
+			ret.m_max_width = MulDiv(1000, DPI.cx, 96);
+			ret.m_max_height = MulDiv(1000, DPI.cy, 96);
 
 			// Deal with WS_EX_STATICEDGE and alike that we might have picked from host
 			ret.adjustForWindow(*this);
@@ -476,6 +536,7 @@ namespace {
 		}
 
 	private:
+		fb2k::CCoreDarkModeHooks m_hooks;
 		LRESULT OnEditControlChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 		{
 			if (wParam == 0x1988)
@@ -483,6 +544,24 @@ namespace {
 				GetEditText();
 			}
 			return 0;
+		}
+
+		void OnReset5(UINT, int id, CWindow)
+		{
+			p_freq = 400, p_gain = 10, p_type = 0, p_qual = 0.707;
+			SetConfig();
+			if (IsIIREnabled())
+			{
+				BOOL type1 = (p_type != 10);
+				slider_freq.EnableWindow(type1);
+				slider_gain.EnableWindow(type1);
+				freq_edit.EnableWindow(type1);
+				gain_edit.EnableWindow(type1);
+				dsp_preset_impl preset;
+				dsp_iir::make_preset(p_freq, p_gain, p_type, p_qual, true, preset);
+				static_api_ptr_t<dsp_config_manager>()->core_enable_dsp(preset, dsp_config_manager::default_insert_last);
+				RefreshLabel(p_freq, p_gain, p_type);
+			}
 		}
 
 		void OnChange1(UINT scrollid, int id, CWindow window)
@@ -493,58 +572,65 @@ namespace {
 			p_type = SendDlgItemMessage(IDC_IIRTYPE1, CB_GETCURSEL);
 			if(IsIIREnabled())
 			{
+				IIREnable(p_freq, p_gain, p_type, p_qual, true);
 				dsp_preset_impl preset;
 				dsp_iir::make_preset(p_freq, p_gain, p_type, p_qual, true, preset);
 				static_api_ptr_t<dsp_config_manager>()->core_enable_dsp(preset, dsp_config_manager::default_insert_last);
 
 			}
-			if (p_type == 10) {
-				slider_freq.EnableWindow(FALSE);
-				slider_gain.EnableWindow(FALSE);
-			}
-			else
-			{
-				slider_freq.EnableWindow(TRUE);
-				slider_gain.EnableWindow(TRUE);
-			}
+			BOOL type1 = (p_type != 10);
+			slider_freq.EnableWindow(type1);
+			slider_gain.EnableWindow(type1);
+			freq_edit.EnableWindow(type1);
+			gain_edit.EnableWindow(type1);
+	
 			RefreshLabel(p_freq, p_gain, p_type);
 
 		}
 
 		void GetEditText()
 		{
-			CString sWindowText,sWindowText2;
+			bool changed = false;
+			CString sWindowText,sWindowText2,sWindowText3;
+			freq_edit.GetWindowText(sWindowText3);
+			int freq2 = pfc::clip_t<t_int32>(_ttoi(sWindowText3), 0, FreqMax);
+			if (freq_s != sWindowText3)
+			{
+				p_freq = freq2;
+				changed = true;
+
+			}
 			pitch_edit.GetWindowText(sWindowText);
 			float pitch2 = _ttof(sWindowText);
 			if (pitch_s != sWindowText)
 			{
 				p_qual = pitch2;
-				if (IsIIREnabled())
-				{
-					dsp_preset_impl preset;
-					dsp_iir::make_preset(p_freq, p_gain, p_type, pitch2, true, preset);
-					static_api_ptr_t<dsp_config_manager>()->core_enable_dsp(preset, dsp_config_manager::default_insert_last);
-					
-				}
-				
+				changed = true;
 			}
 
 			gain_edit.GetWindowText(sWindowText2);
-			float gain2 = _ttof(sWindowText2);
-			gain2 = clamp_ml(gain2, 100, -100);
+			float gain2 = pfc::clip_t<t_float32>(_ttof(sWindowText2), -100.00, 100);
 			if (gain_s != sWindowText2)
 			{
 				p_gain = gain2;
+				changed = true;
+			}
+
+			if (changed)
 				SetConfig();
 				if (IsIIREnabled())
 				{
+					BOOL type1 = (p_type != 10);
+					slider_freq.EnableWindow(type1);
+					slider_gain.EnableWindow(type1);
+					freq_edit.EnableWindow(type1);
+					gain_edit.EnableWindow(type1);
 					dsp_preset_impl preset;
-					dsp_iir::make_preset(p_freq, gain2, p_type, p_qual, true, preset);
+					dsp_iir::make_preset(p_freq, p_gain, p_type, p_qual, true, preset);
 					static_api_ptr_t<dsp_config_manager>()->core_enable_dsp(preset, dsp_config_manager::default_insert_last);
+					RefreshLabel(p_freq, p_gain, p_type);
 				}
-				
-
-			}
+			
 		}
 
 
@@ -661,6 +747,8 @@ namespace {
 		{
 			pitch_edit.AttachToDlgItem(m_hWnd);
 			pitch_edit.SubclassWindow(GetDlgItem(IDC_IIRQ));
+			freq_edit.AttachToDlgItem(m_hWnd);
+			freq_edit.SubclassWindow(GetDlgItem(IDC_IIRFREQEDIT2));
 			gain_edit.AttachToDlgItem(m_hWnd);
 			gain_edit.SubclassWindow(GetDlgItem(IDC_IIRGAINEDIT));
 			slider_freq = GetDlgItem(IDC_IIRFREQ1);
@@ -687,6 +775,7 @@ namespace {
 			m_ownIIRUpdate = false;
 
 			ApplySettings();
+			m_hooks.AddDialogWithControls(m_hWnd);
 			return TRUE;
 		}
 
@@ -695,21 +784,13 @@ namespace {
 			pfc::string_formatter msg;
 
 			if (p_type == 10)
-			{
-				msg << "Frequency: disabled";
-				::uSetDlgItemText(*this, IDC_IIRFREQINFO1, msg);
-				msg.reset();
-				msg << "Gain: disabled";
-				::uSetDlgItemText(*this, IDC_IIRGAININFO1, msg);
 				return;
-
-			}
-			msg << "Frequency: ";
-			msg << pfc::format_int(p_freq) << " Hz";
-			::uSetDlgItemText(*this, IDC_IIRFREQINFO1, msg);
 			msg.reset();
-			msg << "Gain (db)";
-			::uSetDlgItemText(*this, IDC_IIRGAININFO1, msg);
+			msg << pfc::format_int(p_freq);
+			CString sWindowText3;
+			sWindowText3 = msg.c_str();
+			freq_s = sWindowText3;
+			freq_edit.SetWindowText(sWindowText3);
 
 			msg.reset();
 			msg << pfc::format_float(p_gain, 0, 2);
@@ -731,6 +812,8 @@ namespace {
 		float p_gain; //gain
 		int p_type; //filter type
 		float p_qual;
+		CEditMod freq_edit;
+		CString freq_s;
 		CEditMod pitch_edit;
 		CString pitch_s;
 		CEditMod gain_edit;
@@ -738,6 +821,7 @@ namespace {
 		CTrackBarCtrl slider_freq, slider_gain;
 		CButton m_buttonIIREnabled;
 		bool m_ownIIRUpdate;
+		CDialogResizeHelper m_resizer;
 
 		static uint32_t parseConfig(ui_element_config::ptr cfg) {
 			return 1;
@@ -775,8 +859,14 @@ namespace {
 			return true;
 		}
 
+		bool get_popup_specs(ui_size& defSize, pfc::string_base& title)
+		{
+			defSize = { 220,120 };
+			title = "IIR Filter";
+			return true;
+		}
+
 	};
 	static service_factory_single_t<myElem_t> g_myElemFactory;
-
 
 }

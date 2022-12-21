@@ -1,6 +1,7 @@
 #pragma once
 
 #ifdef FOOBAR2000_HAVE_DSP
+#include "dsp.h"
 
 //! Helper class for running audio data through a DSP chain.
 class dsp_manager {

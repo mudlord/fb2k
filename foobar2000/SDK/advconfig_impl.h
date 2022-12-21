@@ -1,13 +1,6 @@
 #pragma once
 
 #include "advconfig.h"
-#include "configStore.h"
-#include "configCache.h"
-#include "cfg_var_legacy.h" // cfg_var_reader
-
-namespace fb2k {
-	pfc::string8 advconfig_autoName(const GUID& id);
-}
 
 //! Standard implementation of advconfig_branch. \n
 //! Usage: no need to use this class directly - use advconfig_branch_factory instead.
@@ -24,6 +17,20 @@ private:
 	GUID m_guid, m_parent;
 	const double m_priority;
 };
+
+
+#if FOOBAR2000_TARGET_VERSION < 81
+#include "advconfig_impl_legacy.h"
+#else
+
+#include "configStore.h"
+#include "configCache.h"
+#include "cfg_var_legacy.h" // cfg_var_reader
+
+namespace fb2k {
+	pfc::string8 advconfig_autoName(const GUID& id);
+}
+
 
 //! Standard implementation of advconfig_entry_checkbox. \n
 class advconfig_entry_checkbox_impl : public advconfig_entry_checkbox_v2, private cfg_var_legacy::cfg_var_reader {
@@ -73,7 +80,7 @@ public:
 template<bool is_radio>
 class advconfig_checkbox_factory_ : public service_factory_single_t<advconfig_entry_checkbox_impl> {
 public:
-	// advconfig_checkbox_factory_(const char* name, const GUID& guid, const GUID& parent, double priority, bool initialstate, uint32_t flags = 0) : service_factory_single_t<advconfig_entry_checkbox_impl>(name, fb2k::advconfig_autoName(guid), guid, parent, priority, initialstate, is_radio, flags) {}
+	advconfig_checkbox_factory_(const char* name, const GUID& guid, const GUID& parent, double priority, bool initialstate, uint32_t flags = 0) : service_factory_single_t<advconfig_entry_checkbox_impl>(name, fb2k::advconfig_autoName(guid), guid, parent, priority, initialstate, is_radio, flags) {}
 	advconfig_checkbox_factory_(const char* name, const char* varName, const GUID& guid, const GUID& parent, double priority, bool initial, uint32_t flags = 0) : service_factory_single_t<advconfig_entry_checkbox_impl>(name, varName, guid, parent, priority, initial, is_radio, flags) {}
 
 	bool get() const { return this->get_static_instance().get_state_(); }
@@ -128,7 +135,7 @@ private:
 class advconfig_string_factory : public service_factory_single_t<advconfig_entry_string_impl> {
 public:
 	advconfig_string_factory(const char* p_name, const char * varName, const GUID& p_guid, const GUID& p_parent, double p_priority, const char* p_initialstate, t_uint32 p_prefFlags = 0) : service_factory_single_t<advconfig_entry_string_impl>(p_name, varName, p_guid, p_parent, p_priority, p_initialstate, p_prefFlags) {}
-	// advconfig_string_factory(const char* p_name, const GUID& p_guid, const GUID& p_parent, double p_priority, const char* p_initialstate, t_uint32 p_prefFlags = 0) : service_factory_single_t<advconfig_entry_string_impl>(p_name, fb2k::advconfig_autoName(p_guid), p_guid, p_parent, p_priority, p_initialstate, p_prefFlags) {}
+	advconfig_string_factory(const char* p_name, const GUID& p_guid, const GUID& p_parent, double p_priority, const char* p_initialstate, t_uint32 p_prefFlags = 0) : service_factory_single_t<advconfig_entry_string_impl>(p_name, fb2k::advconfig_autoName(p_guid), p_guid, p_parent, p_priority, p_initialstate, p_prefFlags) {}
 
 	void get(pfc::string_base& out) { get_static_instance().get_state(out); }
 	void set(const char* in) { get_static_instance().set_state(in); }
@@ -202,7 +209,7 @@ template<typename int_t_>
 class advconfig_integer_factory_ : public service_factory_single_t<advconfig_entry_integer_impl_<int_t_>> {
 public:
 	typedef int_t_ int_t;
-	// advconfig_integer_factory(const char* p_name, const GUID& p_guid, const GUID& p_parent, double p_priority, t_uint64 p_initialstate, t_uint64 p_min, t_uint64 p_max, t_uint32 p_prefFlags = 0) : service_factory_single_t<advconfig_entry_integer_impl>(p_name, fb2k::advconfig_autoName(p_guid), p_guid, p_parent, p_priority, p_initialstate, p_min, p_max, p_prefFlags) {}
+	advconfig_integer_factory_(const char* p_name, const GUID& p_guid, const GUID& p_parent, double p_priority, t_uint64 p_initialstate, t_uint64 p_min, t_uint64 p_max, t_uint32 p_prefFlags = 0) : service_factory_single_t<advconfig_entry_integer_impl>(p_name, fb2k::advconfig_autoName(p_guid), p_guid, p_parent, p_priority, p_initialstate, p_min, p_max, p_prefFlags) {}
 	advconfig_integer_factory_(const char* p_name, const char * p_varName, const GUID& p_guid, const GUID& p_parent, double p_priority, int_t p_initialstate, int_t p_min, int_t p_max, t_uint32 p_prefFlags = 0) : service_factory_single_t<advconfig_entry_integer_impl_<int_t_> >(p_name, p_varName, p_guid, p_parent, p_priority, p_initialstate, p_min, p_max, p_prefFlags) {}
 
 	int_t get() const { return this->get_static_instance().get_state_int(); }
@@ -250,12 +257,13 @@ typedef advconfig_checkbox_factory_cached_<true> advconfig_radio_factory_cached;
 /*
   Advanced Preferences variable declaration examples
 
-	static advconfig_string_factory mystring("name goes here",myguid,parentguid,0,"asdf");
+	static advconfig_string_factory mystring("name goes here","configStore var name goes here", myguid,parentguid,0,"asdf");
 	to retrieve state: pfc::string8 val; mystring.get(val);
 
-	static advconfig_checkbox_factory mycheckbox("name goes here",myguid,parentguid,0,false);
+	static advconfig_checkbox_factory mycheckbox("name goes here","configStore var name goes here", myguid,parentguid,0,false);
 	to retrieve state: mycheckbox.get();
 
-	static advconfig_integer_factory myint("name goes here",myguid,parentguid,0,initialValue,minimumValue,maximumValue);
+	static advconfig_integer_factory myint("name goes here","configStore var name goes herE", myguid,parentguid,0,initialValue,minimumValue,maximumValue);
 	to retrieve state: myint.get();
 */
+#endif

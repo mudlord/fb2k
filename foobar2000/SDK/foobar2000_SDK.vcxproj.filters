@@ -248,9 +248,6 @@
     <ClInclude Include="foobar2000-winver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="foobar2000-dsp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="audio_chunk_impl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -387,6 +384,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="toolbarDropDown.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="coreDarkMode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="foobar2000-versions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="foobar2000-lite.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="foobar2000-sdk-pch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="threadsLite.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -544,9 +556,6 @@
     <ClCompile Include="componentversion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="search_tools.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="file_cached_impl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -584,6 +593,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="file_info_const_impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cfg_var.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

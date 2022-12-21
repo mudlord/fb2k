@@ -1,18 +1,15 @@
 #define _USE_MATH_DEFINES
 #include "../helpers/foobar2000+atl.h"
+#include <coreDarkMode.h>
+#include "../../libPPUI/CDialogResizeHelper.h"
 #include "../../libPPUI/win32_utility.h"
 #include "../../libPPUI/win32_op.h" // WIN32_OP()
-#include "../helpers/atl-misc.h"// ui_element_impl
+#include "../SDK/ui_element.h"
 #include "../helpers/BumpableElem.h"// ui_element_impl
 #include "resource.h"
 #include "dsp_guids.h"
 
 namespace {
-
-	static double clamp_ml(double x, double upper, double lower)
-	{
-		return min(upper, max(x, lower));
-	}
 
 	class CEditMod : public CWindowImpl<CEditMod, CEdit >
 	{
@@ -51,7 +48,7 @@ namespace {
 	class Chorus
 	{
 	private:
-		float old[CHORUS_MAX_DELAY];
+		audio_sample old[CHORUS_MAX_DELAY];
 		unsigned old_ptr;
 		float delay_;
 		float depth_;
@@ -76,7 +73,7 @@ namespace {
 
 		void init(float delay, float depth, float lfo_freq, float drywet, int rate)
 		{
-			memset(old, 0, CHORUS_MAX_DELAY * sizeof(float));
+			memset(old, 0, CHORUS_MAX_DELAY * sizeof(audio_sample));
 			old_ptr = 0;
 			delay_ = delay / 1000.0f;
 			depth_ = depth / 1000.0f;
@@ -101,25 +98,25 @@ namespace {
 			lfo_ptr = 0;
 
 		}
-		float Process(float in)
+		audio_sample Process(audio_sample in)
 		{
-			float in_smp = in;
+			audio_sample in_smp = in;
 			old[old_ptr] = in_smp;
-			float delay2 = this->delay_ + depth_ * sin((2.0 * M_PI * lfo_ptr++) / lfo_period);
+			audio_sample delay2 = this->delay_ + depth_ * sin((2.0 * M_PI * lfo_ptr++) / lfo_period);
 			delay2 *= rate;
 			if (lfo_ptr >= lfo_period)
 				lfo_ptr = 0;
 			unsigned delay_int = (unsigned)delay2;
 			if (delay_int >= CHORUS_MAX_DELAY - 1)
 				delay_int = CHORUS_MAX_DELAY - 2;
-			float delay_frac = delay2 - delay_int;
+			audio_sample delay_frac = delay2 - delay_int;
 
-			float l_a = old[(old_ptr - delay_int - 0) & CHORUS_DELAY_MASK];
-			float l_b = old[(old_ptr - delay_int - 1) & CHORUS_DELAY_MASK];
+			audio_sample l_a = old[(old_ptr - delay_int - 0) & CHORUS_DELAY_MASK];
+			audio_sample l_b = old[(old_ptr - delay_int - 1) & CHORUS_DELAY_MASK];
 			/* Lerp introduces aliasing of the chorus component,
 			* but doing full polyphase here is probably overkill. */
-			float chorus_l = l_a * (1.0f - delay_frac) + l_b * delay_frac;
-			float smp = mix_dry * in_smp + mix_wet * chorus_l;
+			audio_sample chorus_l = l_a * (1.0f - delay_frac) + l_b * delay_frac;
+			audio_sample smp = mix_dry * in_smp + mix_wet * chorus_l;
 			old_ptr = (old_ptr + 1) & CHORUS_DELAY_MASK;
 			return smp;
 		}
@@ -263,6 +260,9 @@ namespace {
 		}
 	};
 
+
+
+
 	class CMyDSPPopupChorus : public CDialogImpl<CMyDSPPopupChorus>
 	{
 	public:
@@ -281,17 +281,15 @@ namespace {
 			MSG_WM_INITDIALOG(OnInitDialog)
 			COMMAND_HANDLER_EX(IDOK, BN_CLICKED, OnButton)
 			COMMAND_HANDLER_EX(IDCANCEL, BN_CLICKED, OnButton)
-			COMMAND_HANDLER_EX(IDC_RESETCHR1,BN_CLICKED,OnReset1)
-			COMMAND_HANDLER_EX(IDC_RESETCHR2, BN_CLICKED, OnReset2)
-			COMMAND_HANDLER_EX(IDC_RESETCHR3, BN_CLICKED, OnReset3)
-			COMMAND_HANDLER_EX(IDC_RESETCHR4, BN_CLICKED, OnReset4)
 			COMMAND_HANDLER_EX(IDC_RESETCHR5, BN_CLICKED, OnReset5)
 			MSG_WM_HSCROLL(OnHScroll)
 			MESSAGE_HANDLER(WM_USER, OnEditControlChange)
 		END_MSG_MAP()
 
-	private:
+		
 
+	private:
+		fb2k::CCoreDarkModeHooks m_hooks; 
 
 		void Reset(float drywet, float lfo_freq, float depth_ms, float delay_ms)
 		{
@@ -303,31 +301,6 @@ namespace {
 			dsp_chorus::make_preset(delay_ms, depth_ms, lfo_freq, drywet, true, preset);
 			m_callback.on_preset_changed(preset);
 			RefreshLabel(delay_ms, depth_ms, lfo_freq, drywet);
-		}
-
-		void OnReset1(UINT, int id, CWindow)
-		{
-			delay_ms = defaults_chorus.delay_ms;
-			Reset(drywet, lfo_freq, depth_ms, delay_ms);
-
-		}
-
-		void OnReset2(UINT, int id, CWindow)
-		{
-			depth_ms = defaults_chorus.depth_ms;
-			Reset(drywet, lfo_freq, depth_ms, delay_ms);
-		}
-
-		void OnReset3(UINT, int id, CWindow)
-		{
-			lfo_freq = defaults_chorus.lfo_freq;
-			Reset(drywet, lfo_freq, depth_ms, delay_ms);
-		}
-
-		void OnReset4(UINT, int id, CWindow)
-		{
-			drywet = defaults_chorus.drywet;
-			Reset(drywet, lfo_freq, depth_ms, delay_ms);
 		}
 
 		void OnReset5(UINT, int id, CWindow)
@@ -361,16 +334,15 @@ namespace {
 			dsp_preset_impl preset;
 			CString text,text2,text3,text4;
 			delay_edit.GetWindowText(text);
-			float delay2 = _ttof(text);
+			float delay2 = pfc::clip_t<t_float32>(_ttof(text), 2.0, 40.0);
 			if (delay_s != text)
 			{
 				preset_changed = true;
 				delay_ms = delay2;
 			}
 				
-
 			depth_edit.GetWindowText(text2);
-			float depth2 = _ttof(text2);
+			float depth2 = pfc::clip_t<t_float32>(_ttof(text2), 2.0, 40.0);
 			if (depth_s != text2)
 			{
 				preset_changed = true;
@@ -379,7 +351,7 @@ namespace {
 				
 
 			lfo_edit.GetWindowText(text3);
-			float lfo = _ttof(text3);
+			float lfo = pfc::clip_t<t_float32>(_ttof(text3), 0.0, 50.0);
 			if (lfo_s != text3)
 			{
 				preset_changed = true;
@@ -387,7 +359,7 @@ namespace {
 			}
 				
 			drywet_edit.GetWindowText(text4);
-			float drywet2 = _ttof(text4);
+			float drywet2 = pfc::clip_t<t_float32>(_ttof(text3), 0.0, 100.0);
 			if (drywet_s != text4)
 			{
 				preset_changed = true;
@@ -395,14 +367,7 @@ namespace {
 			}
 				
 			if(preset_changed)
-			{
-				dsp_chorus::make_preset(delay_ms, depth_ms, lfo_freq, drywet, true, preset);
-				m_callback.on_preset_changed(preset);
-				slider_drywet.SetPos((double)(100 * drywet));
-				slider_lfofreq.SetPos((double)(100 * lfo_freq));
-				slider_depthms.SetPos((double)(100 * depth_ms));
-				slider_delayms.SetPos((double)(100 * delay_ms));
-			}
+				Reset(drywet, lfo_freq, depth_ms, delay_ms);
 		}
 
 		BOOL OnInitDialog(CWindow, LPARAM)
@@ -435,6 +400,7 @@ namespace {
 				slider_drywet.SetPos((double)(100 * drywet));
 				RefreshLabel(delay_ms, depth_ms, lfo_freq, drywet);
 			}
+			m_hooks.AddDialogWithControls(m_hWnd);
 
 			return TRUE;
 		}
@@ -510,9 +476,37 @@ namespace {
 	{ 0x5bf17f6, 0x67b2, 0x42e9,{ 0xb8, 0x54, 0xa0, 0xd0, 0xf8, 0xce, 0xd4, 0xde } };
 
 
+
+	static const CDialogResizeHelper::Param chorus_uiresize[] = {
+		// Dialog resize handling matrix, defines how the controls scale with the dialog
+		//			 L T R B
+		{IDC_STATIC, 0,0,0,0 },
+		{IDC_STATIC2,    0,0,0,0 },
+		{IDC_STATIC3,    0,0,0,0},
+		{IDC_STATIC4,    0,0,0,0 },
+		{IDC_CHORUSDELAYLAB1, 0,0,0,0},
+		{IDC_CHORUSDEPTHMSLAB1,  0,0,0,0},
+	{IDC_CHORUSLFOFREQLAB1,  0,0,0,0},
+	{IDC_CHORUSDRYWETLAB1, 0,0,0,0},
+	{IDC_CHORUSENABLED, 0,0,0,0},
+	{IDC_RESETCHRUI5,0,0,0,0},
+
+	{IDC_CHORUSDELAYMS1, 0,0,1,0},
+	{IDC_CHORUSDEPTHMS1, 0,0,1,0},
+	{IDC_CHORUSDRYWET1, 0,0,1,0},
+	{IDC_CHORUSLFOFREQ1, 0,0,1,0},
+		// current position of a control is determined by initial_position + factor * (current_dialog_size - initial_dialog_size)
+		// where factor is the value from the table above
+		// applied to all four values - left, top, right, bottom
+		// 0,0,0,0 means that a control doesn't react to dialog resizing (aligned to top+left, no resize)
+		// 1,1,1,1 means that the control is aligned to bottom+right but doesn't resize
+		// 0,0,1,0 means that the control disregards vertical resize (aligned to top) and changes its width with the dialog
+	};
+	static const CRect resizeMinMax(200, 150, 1000, 1000);
 	class uielem_chorus : public CDialogImpl<uielem_chorus>, public ui_element_instance {
 	public:
-		uielem_chorus(ui_element_config::ptr cfg, ui_element_instance_callback::ptr cb) : m_callback(cb) {
+		
+		uielem_chorus(ui_element_config::ptr cfg, ui_element_instance_callback::ptr cb) : m_callback(cb), m_resizer(chorus_uiresize, resizeMinMax) {
 			delay_ms = 25.0;
 			depth_ms = 1.0;
 			lfo_freq = 0.8;
@@ -529,19 +523,15 @@ namespace {
 			depthmax = 100,
 		};
 	private:
-
+		
 		BEGIN_MSG_MAP_EX(uielem_chorus)
+			CHAIN_MSG_MAP_MEMBER(m_resizer)
 			MSG_WM_INITDIALOG(OnInitDialog)
 			COMMAND_HANDLER_EX(IDC_CHORUSENABLED, BN_CLICKED, OnEnabledToggle)
-			COMMAND_HANDLER_EX(IDC_RESETCHRUI1, BN_CLICKED, OnReset1)
-			COMMAND_HANDLER_EX(IDC_RESETCHRUI2, BN_CLICKED, OnReset2)
-			COMMAND_HANDLER_EX(IDC_RESETCHRUI3, BN_CLICKED, OnReset3)
-			COMMAND_HANDLER_EX(IDC_RESETCHRUI4, BN_CLICKED, OnReset4)
 			COMMAND_HANDLER_EX(IDC_RESETCHRUI5, BN_CLICKED, OnReset5)
 			MSG_WM_HSCROLL(OnScroll)
+			MESSAGE_HANDLER(WM_USER, OnEditControlChange)
 		END_MSG_MAP()
-
-
 
 		void initialize_window(HWND parent) { WIN32_OP(Create(parent) != NULL); }
 		HWND get_wnd() { return m_hWnd; }
@@ -565,6 +555,8 @@ namespace {
 			return ui_element_subclass_dsp;
 		}
 
+		
+
 		ui_element_min_max_info get_min_max_info() {
 			ui_element_min_max_info ret;
 
@@ -577,10 +569,10 @@ namespace {
 			}
 
 
-			ret.m_min_width = MulDiv(520, DPI.cx, 96);
-			ret.m_min_height = MulDiv(220, DPI.cy, 96);
-			ret.m_max_width = MulDiv(520, DPI.cx, 96);
-			ret.m_max_height = MulDiv(220, DPI.cy, 96);
+			ret.m_min_width = MulDiv(200, DPI.cx, 96);
+			ret.m_min_height = MulDiv(150, DPI.cy, 96);
+			ret.m_max_width = MulDiv(1000, DPI.cx, 96);
+			ret.m_max_height = MulDiv(1000, DPI.cy, 96);
 
 			// Deal with WS_EX_STATICEDGE and alike that we might have picked from host
 			ret.adjustForWindow(*this);
@@ -591,37 +583,26 @@ namespace {
 	private:
 		void Reset(float drywet, float lfo_freq, float depth_ms, float delay_ms)
 		{
+			delay_ms = 25.0;
+			depth_ms = 1.0;
+			lfo_freq = 0.8;
+			drywet = 1.;
 			slider_drywet.SetPos((double)(100 * drywet));
 			slider_lfofreq.SetPos((double)(100 * lfo_freq));
 			slider_depthms.SetPos((double)(100 * depth_ms));
 			slider_delayms.SetPos((double)(100 * delay_ms));
-			ApplySettings();
+			if (IsEchoEnabled())
+				OnConfigChanged();
 			RefreshLabel(delay_ms, depth_ms, lfo_freq, drywet * 100);
 		}
 
-		void OnReset1(UINT, int id, CWindow)
+		LRESULT OnEditControlChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 		{
-			delay_ms = defaults_chorus.delay_ms;
-			Reset(drywet, lfo_freq, depth_ms, delay_ms);
-
-		}
-
-		void OnReset2(UINT, int id, CWindow)
-		{
-			depth_ms = defaults_chorus.depth_ms;
-			Reset(drywet, lfo_freq, depth_ms, delay_ms);
-		}
-
-		void OnReset3(UINT, int id, CWindow)
-		{
-			lfo_freq = defaults_chorus.lfo_freq;
-			Reset(drywet, lfo_freq, depth_ms, delay_ms);
-		}
-
-		void OnReset4(UINT, int id, CWindow)
-		{
-			drywet = defaults_chorus.drywet;
-			Reset(drywet, lfo_freq, depth_ms, delay_ms);
+			if (wParam == 0x1988)
+			{
+				GetEditText();
+			}
+			return 0;
 		}
 
 		void OnReset5(UINT, int id, CWindow)
@@ -645,41 +626,43 @@ namespace {
 			dsp_preset_impl preset;
 			CString text, text2, text3, text4;
 			delay_edit.GetWindowText(text);
-			float delay2 = _ttof(text);
-			if (delay_s != text) 
+			float delay2 = pfc::clip_t<t_float32>(_ttof(text), 2.0, 40.0);
+			if (delay_s != text)
 			{
-				delay_ms = delay2;
 				preset_changed = true;
+				delay_ms = delay2;
 			}
 
 			depth_edit.GetWindowText(text2);
-			float depth2 = _ttof(text2);
+			float depth2 = pfc::clip_t<t_float32>(_ttof(text2), 2.0, 40.0);
 			if (depth_s != text2)
 			{
-				preset_changed = true; 
+				preset_changed = true;
 				depth_ms = depth2;
 			}
 
 
 			lfo_edit.GetWindowText(text3);
-			float lfo = _ttof(text3);
-			if (lfo_s != text3) 
+			float lfo = pfc::clip_t<t_float32>(_ttof(text3), 0.0, 50.0);
+			if (lfo_s != text3)
 			{
 				preset_changed = true;
 				lfo_freq = lfo;
 			}
 
 			drywet_edit.GetWindowText(text4);
-			float drywet2 = _ttof(text4);
-			if (drywet_s != text4) 
+			float drywet2 = pfc::clip_t<t_float32>(_ttof(text3), 0.0, 100.0);
+			if (drywet_s != text4)
 			{
 				preset_changed = true;
 				drywet = drywet2;
 			}
 				
-			if (preset_changed)
-				ApplySettings();
-			
+				if (preset_changed)
+				{
+					SetConfig();
+					OnConfigChanged();
+				}
 		}
 
 		void SetEchoEnabled(bool state) { m_buttonEchoEnabled.SetCheck(state ? BST_CHECKED : BST_UNCHECKED); }
@@ -787,7 +770,6 @@ namespace {
 			slider_depthms.SetPos((double)(100 * depth_ms));
 			slider_lfofreq.SetPos((double)(100 * lfo_freq));
 			slider_drywet.SetPos((double)(100 * drywet));
-
 			RefreshLabel(delay_ms, depth_ms, lfo_freq, drywet*100);
 
 		}
@@ -836,11 +818,14 @@ namespace {
 			m_ownEchoUpdate = false;
 
 			ApplySettings();
+
+			m_hooks.AddDialogWithControls(m_hWnd);
 			return FALSE;
 		}
 
 
 		uint32_t shit;
+		fb2k::CCoreDarkModeHooks m_hooks;
 
 		void RefreshLabel(float delay_ms, float depth_ms, float lfo_freq, float drywet)
 		{
@@ -876,6 +861,7 @@ namespace {
 		CTrackBarCtrl slider_depthms, slider_delayms, slider_lfofreq, slider_drywet;
 		CButton m_buttonEchoEnabled;
 		bool m_ownEchoUpdate;
+		CDialogResizeHelper m_resizer;
 	protected:
 		const ui_element_instance_callback::ptr m_callback;
 	};
@@ -891,6 +877,13 @@ namespace {
 			out = "Opens a window for chorus effects.";
 			return true;
 		}
+		bool get_popup_specs(ui_size& defSize, pfc::string_base& title)
+		{
+			defSize = { 200,150 };
+			title = "Chorus DSP";
+			return true;
+		}
+
 
 	};
 	static service_factory_single_t<myElem_t2> g_myElemFactory;

@@ -1,4 +1,4 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
 
 #include <pfc/bit_array_impl.h>
 #include <pfc/sort.h>

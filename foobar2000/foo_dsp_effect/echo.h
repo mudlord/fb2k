@@ -1,13 +1,16 @@
 #ifndef		ECHO_H
 #define		ECHO_H
 
+
+#include "../SDK/foobar2000.h"
+
 // A simple echo (or delay) class. Stores just enough history data
 // and mixes it with the input. History data is amplified with values
 // less than 1 to produce echoes.
 class Echo
 {
 private:
-	float *history; // history buffer
+	audio_sample *history; // history buffer
 	int pos;        // current position in history buffer
 	int amp;        // amplification of echoes (0-256)
 	int delay;      // delay in number of samples
@@ -30,7 +33,7 @@ public:
 	inline int GetDelay() const;
 	inline int GetAmp() const;
 	inline int GetSampleRate() const;
-	float Process(float in);
+	audio_sample Process(audio_sample in);
 };
 
 

@@ -153,6 +153,7 @@ namespace foobar2000_io
 
 		// Presumes both source and destination belong to this filesystem.
 		void copy_directory(const char * p_src, const char * p_dst, abort_callback & p_abort);
+		void copy_directory_contents(const char* p_src, const char* p_dst, abort_callback& p_abort);
 
 		//! Moves/renames a file, overwriting the destination atomically if exists. \n
 		//! Note that this function may throw exception_io_denied instead of exception_io_sharing_violation when the file is momentarily in use, due to bugs in Windows MoveFile() API. There is no legitimate way for us to distinguish between the two scenarios.
@@ -258,7 +259,6 @@ namespace foobar2000_io
 	};
 
 	//! \since 2.0
-	//! WORK IN PROGRESS
 	class filesystem_v3 : public filesystem_v2 {
 		FB2K_MAKE_SERVICE_INTERFACE(filesystem_v3, filesystem_v2);
 	public:
@@ -439,6 +439,7 @@ namespace foobar2000_io
 
 	bool matchContentType(const char * fullString, const char * ourType);
 	bool matchProtocol(const char * fullString, const char * protocolName);
+    bool testIfHasProtocol( const char * fullString );
 	const char * afterProtocol( const char * fullString );
 	pfc::string8 getProtocol(const char* fullString);
 	void substituteProtocol(pfc::string_base & out, const char * fullString, const char * protocolName);

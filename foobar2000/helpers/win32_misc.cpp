@@ -7,6 +7,8 @@
 
 #ifdef _WIN32
 
+#include <SDK/modeless_dialog.h>
+
 mutexScope::mutexScope(HANDLE hMutex_, abort_callback & abort) : hMutex(hMutex_) {
 	HANDLE h[2] = { hMutex, abort.get_abort_event() };
 	switch (WaitForMultipleObjectsEx(2, h, FALSE, INFINITE, FALSE)) {

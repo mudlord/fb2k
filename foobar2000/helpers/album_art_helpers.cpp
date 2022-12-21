@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "album_art_helpers.h"
 #include <SDK/imageLoaderLite.h>
+#include <SDK/album_art_helpers.h>
 
 #ifdef _WIN32
 #include <libPPUI/gdiplus_helpers.h>

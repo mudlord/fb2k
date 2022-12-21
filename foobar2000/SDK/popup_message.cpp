@@ -1,4 +1,5 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
+#include "popup_message.h"
 #include "messageBox.h"
 
 void popup_message::g_show_ex(const char * p_msg,size_t p_msg_length,const char * p_title,size_t p_title_length,t_icon p_icon)

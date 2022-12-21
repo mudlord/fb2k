@@ -178,6 +178,7 @@
       <AdditionalIncludeDirectories>..</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ConformanceMode>true</ConformanceMode>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -319,7 +320,6 @@
   <ItemGroup>
     <ClInclude Include="AutoComplete.h" />
     <ClInclude Include="CButtonLite.h" />
-    <ClInclude Include="CContainedWindowSimple.h" />
     <ClInclude Include="CDialogResizeHelperCompat.h" />
     <ClInclude Include="CEditWithButtons.h" />
     <ClInclude Include="CEnumString.h" />
@@ -343,6 +343,7 @@
     <ClInclude Include="CListControl_EditImpl.h" />
     <ClInclude Include="CListViewCtrlEx.h" />
     <ClInclude Include="CMiddleDragImpl.h" />
+    <ClInclude Include="CMiddleDragLite.h" />
     <ClInclude Include="CMiddleDragOverlay.h" />
     <ClInclude Include="commandline_parser.h" />
     <ClInclude Include="Controls.h" />
@@ -358,6 +359,7 @@
     <ClInclude Include="gdiplus_helpers.h" />
     <ClInclude Include="GDIUtils.h" />
     <ClInclude Include="gesture.h" />
+    <ClInclude Include="hookWindowMessages.h" />
     <ClInclude Include="IDataObjectUtils.h" />
     <ClInclude Include="ImageEncoder.h" />
     <ClInclude Include="ImplementOnFinalMessage.h" />
@@ -375,6 +377,7 @@
     <ClInclude Include="TypeFind.h" />
     <ClInclude Include="win32_op.h" />
     <ClInclude Include="win32_utility.h" />
+    <ClInclude Include="windowLifetime.h" />
     <ClInclude Include="wtl-pp.h" />
   </ItemGroup>
   <ItemGroup>
@@ -421,17 +424,7 @@
     <Text Include="libPPUI-license.txt" />
     <Text Include="libPPUI-readme.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\foobar2000\foo_dsp_effect\packages\wtl.10.0.10320\build\native\wtl.targets" Condition="Exists('..\foobar2000\foo_dsp_effect\packages\wtl.10.0.10320\build\native\wtl.targets')" />
   </ImportGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\foobar2000\foo_dsp_effect\packages\wtl.10.0.10320\build\native\wtl.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\foobar2000\foo_dsp_effect\packages\wtl.10.0.10320\build\native\wtl.targets'))" />
-  </Target>
 </Project>

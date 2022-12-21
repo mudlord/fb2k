@@ -6,7 +6,7 @@ comb::comb() {
 	bufidx = 0;
 }
 
-void comb::setbuffer(float *buf, int size) {
+void comb::setbuffer(audio_sample *buf, int size) {
 	buffer = buf;
 	bufsize = size;
 }
@@ -39,7 +39,7 @@ allpass::allpass() {
 	bufidx = 0;
 }
 
-void allpass::setbuffer(float *buf, int size) {
+void allpass::setbuffer(audio_sample *buf, int size) {
 	buffer = buf;
 	bufsize = size;
 }
@@ -88,12 +88,12 @@ revmodel::~revmodel()
 	}
 }
 
-void revmodel::init(int srate)
+void revmodel::init(int srate,bool stereo)
 {
 	static const int comb_lengths[8] = { 1116,1188,1277,1356,1422,1491,1557,1617 };
 	static const int allpass_lengths[4] = { 225,341,441,556 };
-
-	double r = srate * (1 / 44100.0);
+	int stereosep = stereo ? 23 : 0;
+	int r = (srate * (1.0 / 44100.0));
 	if (bufcomb) {
 		for (int c = 0; c < num_comb; ++c)
 		{
@@ -104,11 +104,11 @@ void revmodel::init(int srate)
 		bufcomb = NULL;
 	}
 
-   bufcomb= new float *[num_comb];
+   bufcomb= new audio_sample *[num_comb];
    for (int c = 0; c < num_comb; ++c)
    {
-	   bufcomb[c] = new float[r*comb_lengths[c]];
-	   combL[c].setbuffer(bufcomb[c], r*comb_lengths[c]);
+	   bufcomb[c] = new audio_sample[r*(comb_lengths[c]+ stereosep)]();
+	   combL[c].setbuffer(bufcomb[c], r*(comb_lengths[c]+ stereosep));
    }
 
    if (bufallpass) {
@@ -117,14 +117,14 @@ void revmodel::init(int srate)
 		   delete[] bufallpass[a];
 		   bufallpass[a] = NULL;
 	   }
-	   delete[] bufallpass;
+	   delete []bufallpass;
 	   bufallpass = NULL;
    }
-   bufallpass = new float *[num_allpass];
+   bufallpass = new audio_sample *[num_allpass];
    for (int a = 0;a< num_allpass; ++a)
    {
-	   bufallpass[a] = new float[r*allpass_lengths[a]];
-	   allpassL[a].setbuffer(bufallpass[a], r*allpass_lengths[a]);
+	   bufallpass[a] = new audio_sample[r*(allpass_lengths[a]+stereosep)]();
+	   allpassL[a].setbuffer(bufallpass[a], (r*(allpass_lengths[a]+ stereosep)));
 	   allpassL[a].setfeedback(0.5f);
    }
 	setwet(initialwet);
@@ -133,7 +133,7 @@ void revmodel::init(int srate)
 	setdamp(initialdamp);
 	setwidth(initialwidth);
 	setmode(initialmode);
-	mute();
+	
 }
 
 void revmodel::mute() {
@@ -151,17 +151,17 @@ void revmodel::mute() {
 	}
 }
 
-float revmodel::processsample(float in)
+audio_sample revmodel::processsample(audio_sample in)
 {
-	float samp = in;
-	float mono_out = 0.0f;
-	float mono_in = samp;
-	float input = (mono_in) * gain;
-	for(int i=0; i<numcombs; i++)
+	audio_sample samp = in;
+	audio_sample mono_out = 0.0f;
+	audio_sample mono_in = samp;
+	audio_sample input = (mono_in)*gain;
+	for (int i = 0; i < numcombs; i++)
 	{
 		mono_out += combL[i].process(input);
 	}
-	for(int i=0; i<numallpasses; i++)
+	for (int i = 0; i < numallpasses; i++)
 	{
 		mono_out = allpassL[i].process(mono_out);
 	}

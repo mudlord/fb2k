@@ -1,6 +1,10 @@
 #pragma once
 
 #ifdef FOOBAR2000_HAVE_DSP
+#include "dsp.h"
+#include "file_info_impl.h"
+#include "input.h"
+
 //! \since 1.1
 //! This service is essentially a special workaround to easily decode DTS/HDCD content stored in files pretending to contain plain PCM data. \n
 //! Callers: Instead of calling this directly, you probably want to use input_postprocessed template. \n

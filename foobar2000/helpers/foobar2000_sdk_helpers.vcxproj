@@ -142,6 +142,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <PreprocessorDefinitions>NDEBUG;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -171,6 +172,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <PreprocessorDefinitions>NDEBUG;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -200,6 +202,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <PreprocessorDefinitions>NDEBUG;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -229,6 +232,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <PreprocessorDefinitions>NDEBUG;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -252,6 +256,7 @@
       <TreatSpecificWarningsAsErrors>4715</TreatSpecificWarningsAsErrors>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -275,6 +280,7 @@
       <TreatSpecificWarningsAsErrors>4715</TreatSpecificWarningsAsErrors>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -298,6 +304,7 @@
       <TreatSpecificWarningsAsErrors>4715</TreatSpecificWarningsAsErrors>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -321,6 +328,7 @@
       <TreatSpecificWarningsAsErrors>4715</TreatSpecificWarningsAsErrors>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -509,12 +517,14 @@
     <ClInclude Include="CSingleThreadWrapper.h" />
     <ClInclude Include="CTableEditHelper-Legacy.h" />
     <ClInclude Include="DarkMode.h" />
+    <ClInclude Include="dsp_dialog.h" />
     <ClInclude Include="duration_counter.h" />
     <ClInclude Include="fb2k_threads.h" />
     <ClInclude Include="fb2k_wfx.h" />
     <ClInclude Include="fileReadAhead.h" />
     <ClInclude Include="file_readonly.h" />
     <ClInclude Include="foobar2000+atl.h" />
+    <ClInclude Include="foobar2000-lite+atl.h" />
     <ClInclude Include="fullFileBuffer.h" />
     <ClInclude Include="bitreader_helper.h" />
     <ClInclude Include="CallForwarder.h" />
@@ -549,6 +559,7 @@
     <ClInclude Include="meta_table_builder.h" />
     <ClInclude Include="metadb_io_hintlist.h" />
     <ClInclude Include="mp3_utils.h" />
+    <ClInclude Include="notifyList.h" />
     <ClInclude Include="packet_decoder_aac_common.h" />
     <ClInclude Include="packet_decoder_mp3_common.h" />
     <ClInclude Include="playlist_position_reference_tracker.h" />
@@ -577,17 +588,7 @@
     <ClInclude Include="winmm-types.h" />
     <ClInclude Include="writer_wav.h" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\foo_dsp_effect\packages\wtl.10.0.10320\build\native\wtl.targets" Condition="Exists('..\foo_dsp_effect\packages\wtl.10.0.10320\build\native\wtl.targets')" />
   </ImportGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\foo_dsp_effect\packages\wtl.10.0.10320\build\native\wtl.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\foo_dsp_effect\packages\wtl.10.0.10320\build\native\wtl.targets'))" />
-  </Target>
 </Project>

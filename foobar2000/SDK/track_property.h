@@ -63,6 +63,7 @@ public:
 	//! @param abort The aborter for this operation.
 	void enumerate_properties_helper(trackListRef items, track_property_provider_v3_info_source * info, track_property_callback_v2 & callback, abort_callback & abort);
 	void enumerate_properties_helper(trackListRef items, track_property_provider_v5_info_source* info, track_property_callback_v2& callback, abort_callback& abort);
+	void enumerate_properties_helper(trackListRef items, std::nullptr_t, track_property_callback_v2& callback, abort_callback& abort);
 
 	FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(track_property_provider);
 };

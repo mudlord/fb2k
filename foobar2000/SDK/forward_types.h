@@ -28,3 +28,12 @@ typedef service_ptr_t<titleformat_object> titleformat_object_ptr;
 class mem_block_container;
 
 class file_info_filter;
+
+class metadb_handle;
+typedef service_ptr_t<metadb_handle> metadb_handle_ptr;
+
+namespace foobar2000_io {
+	class stream_reader; class stream_writer;
+}
+
+class metadb_io_callback_v2_data;

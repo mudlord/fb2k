@@ -1,5 +1,8 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
 #include "console_manager.h"
+#include "console.h"
+#include "metadb_handle.h"
+#include "event_logger.h"
 
 void console::info(const char * p_message) {print(p_message);}
 void console::error(const char * p_message) {complain("Error", p_message);}

@@ -1,4 +1,4 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
 #include "foosortstring.h"
 
 #ifdef _WIN32

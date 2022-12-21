@@ -1,8 +1,11 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
 #include "foosort.h"
 #include "threadPool.h"
 #include "foosortstring.h"
 #include <vector>
+#include "titleformat.h"
+#include "library_manager.h"
+#include "genrand.h"
 
 namespace {
 

@@ -1,4 +1,4 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
 #include "output.h"
 #include "audio_chunk_impl.h"
 #include "dsp.h"

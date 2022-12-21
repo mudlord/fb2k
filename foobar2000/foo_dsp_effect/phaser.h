@@ -1,6 +1,8 @@
 #ifndef		PHASER_H
 #define		PHASER_H
 
+#include "../SDK/foobar2000.h"
+
 class Phaser
 {
 private:
@@ -11,7 +13,7 @@ private:
    int stages;
    int drywet;
    unsigned long skipcount;
-   float old[24];
+   audio_sample old[24];
    float gain;
    float fbout;
    float lfoskip;
@@ -19,7 +21,7 @@ private:
 public:
 	Phaser();
 	~Phaser();
-	float Process(float input);
+	audio_sample Process(audio_sample input);
 	void init(int samplerate);
 	void SetLFOFreq(float val);
 	void SetLFOStartPhase(float val);

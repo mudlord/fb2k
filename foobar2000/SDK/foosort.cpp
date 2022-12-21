@@ -1,6 +1,7 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
 #include "foosort.h"
 #include "threadPool.h"
+#include "genrand.h"
 
 #define FOOSORT_PROFILING 0
 

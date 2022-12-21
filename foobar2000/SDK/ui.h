@@ -57,6 +57,14 @@ public:
 	//! Returning true from cap_suppress_core_shellhook implies the same from cap_suppress_core_uvc.
 	static const GUID cap_suppress_core_uvc;
 };
+
+class ui_config_manager;
+//! \since 2.0
+class NOVTABLE user_interface_v3 : public user_interface_v2 {
+	FB2K_MAKE_SERVICE_INTERFACE(user_interface_v3, user_interface_v2);
+public:
+	virtual service_ptr_t< ui_config_manager > get_config_manager() = 0;
+};
 #endif // _WIN32
 
 //! Interface class allowing you to override UI statusbar text. There may be multiple callers trying to override statusbar text; backend decides which one succeeds so you will not always get what you want. Statusbar text override is automatically cancelled when the object is released.\n

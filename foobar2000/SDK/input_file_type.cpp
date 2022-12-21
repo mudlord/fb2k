@@ -1,4 +1,8 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
+#include "input_file_type.h"
+#include "componentversion.h"
+#include "archive.h"
+#include "playlist_loader.h"
 
 #if FOOBAR2000_TARGET_VERSION >= 76
 

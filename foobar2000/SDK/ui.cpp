@@ -1,5 +1,7 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
 #include "ui_edit_context.h"
+#include "ui.h"
+#include "genrand.h"
 
 #ifdef _WIN32
 bool ui_drop_item_callback::g_on_drop(interface IDataObject * pDataObject)

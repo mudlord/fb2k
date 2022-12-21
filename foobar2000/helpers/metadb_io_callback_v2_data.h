@@ -3,6 +3,7 @@
 #pragma once
 #include <mutex>
 #include <vector>
+#include <SDK/metadb_callbacks.h>
 
 class metadb_io_callback_v2_data_impl : public metadb_io_callback_v2_data {
 	metadb_handle_list_cref m_items;

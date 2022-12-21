@@ -3,6 +3,7 @@
 #ifdef FOOBAR2000_DESKTOP_WINDOWS
 
 #include "window_placement_helper.h"
+#include <SDK/config_object.h>
 
 static bool g_is_enabled()
 {

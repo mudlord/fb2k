@@ -57,10 +57,10 @@ void WahWah::init(int samplerate)
 	phase = startphase * M_PI / 180;
 }
 
-float WahWah::Process(float samp)
+audio_sample WahWah::Process(audio_sample samp)
 {
-	float frequency, omega, sn, cs, alpha;
-	float in, out;
+	audio_sample frequency, omega, sn, cs, alpha;
+	audio_sample in, out;
     in = samp;
 	if ((skipcount++) % lfoskipsamples == 0) {
 	frequency = (1 + cos(skipcount * lfoskip + phase)) / 2;

@@ -1,4 +1,7 @@
 #pragma once
+#include "menu.h"
+#include "contextmenu.h"
+
 namespace menu_helpers {
 #ifdef _WIN32
 	void win32_auto_mnemonics(HMENU menu);

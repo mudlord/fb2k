@@ -1,4 +1,4 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
 
 #ifdef _MSC_VER
 #include <pfc/fpu.h>

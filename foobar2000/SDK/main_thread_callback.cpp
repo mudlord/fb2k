@@ -1,4 +1,6 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
+#include "main_thread_callback.h"
+#include "abort_callback.h"
 #include <memory>
 #include <pfc/synchro.h>
 

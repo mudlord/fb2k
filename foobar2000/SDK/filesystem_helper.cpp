@@ -1,4 +1,5 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
+#include "filesystem_helper.h"
 
 void stream_writer_chunk::write(const void * p_buffer,t_size p_bytes,abort_callback & p_abort) {
 	t_size remaining = p_bytes, written = 0;

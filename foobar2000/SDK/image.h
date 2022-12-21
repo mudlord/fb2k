@@ -1,5 +1,7 @@
 #pragma once
 #include "imageLoaderLite.h"
+#include "filesystem.h"
+#include "tracks.h"
 
 namespace fb2k {
 

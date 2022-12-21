@@ -170,9 +170,6 @@
     <ClInclude Include="DarkModeEx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CContainedWindowSimple.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CListControl-Subst.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -186,6 +183,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ImageEncoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CMiddleDragLite.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="windowLifetime.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hookWindowMessages.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -281,8 +287,5 @@
   <ItemGroup>
     <Text Include="libPPUI-license.txt" />
     <Text Include="libPPUI-readme.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
 </Project>

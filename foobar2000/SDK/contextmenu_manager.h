@@ -1,6 +1,8 @@
 #pragma once
 
 #include "menu_common.h"
+#include "metadb.h"
+#include "contextmenu.h"
 
 #ifdef FOOBAR2000_HAVE_KEYBOARD_SHORTCUTS
 class NOVTABLE keyboard_shortcut_manager : public service_base {

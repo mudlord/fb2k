@@ -1,5 +1,8 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
 #include "image.h"
+#include "album_art.h"
+#include "album_art_helpers.h"
+#include "input.h"
 
 GUID album_art_extractor::get_guid() {
 	album_art_extractor_v2::ptr v2;
@@ -193,7 +196,7 @@ bool album_art_path_list::equals(album_art_path_list const& v1, album_art_path_l
 	const size_t n = v1.get_count();
 	if (n != v2.get_count()) return false;
 	for (size_t w = 0; w < n; ++w) {
-		if (metadb::path_compare(v1.get_path(w), v2.get_path(w)) != 0) return false;
+		if (playable_location::path_compare(v1.get_path(w), v2.get_path(w)) != 0) return false;
 	}
 	return true;
 }

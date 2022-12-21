@@ -1,5 +1,8 @@
 #pragma once
 
+// foobar2000 v2.0+ only
+#if FOOBAR2000_TARGET_VERSION >= 81
+
 template<typename parent_t>
 class CListControlFb2kColors : public parent_t, protected ui_config_callback_impl {
 public:
@@ -17,3 +20,5 @@ protected:
 	}
 	const ui_config_manager::ptr m_uiConfig = ui_config_manager::get();
 };
+
+#endif

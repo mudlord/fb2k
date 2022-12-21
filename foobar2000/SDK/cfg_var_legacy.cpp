@@ -1,4 +1,4 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
 #include "cfg_var_legacy.h"
 
 #ifdef FOOBAR2000_HAVE_CFG_VAR_LEGACY

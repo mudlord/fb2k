@@ -1,4 +1,4 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
 #include "file_info_impl.h"
 #include "tag_processor.h"
 

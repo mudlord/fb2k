@@ -1,4 +1,4 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
 
 #include "track_property.h"
 #include "metadb_info_container_impl.h"
@@ -102,14 +102,7 @@ track_property_provider_v5_info_source_impl::track_property_provider_v5_info_sou
 void track_property_provider::enumerate_properties_helper(trackListRef items, track_property_provider_v5_info_source* info, track_property_callback_v2& callback, abort_callback& abort) {
 
 	if (info == nullptr) {
-		track_property_provider_v5::ptr v5;
-		if (v5 &= this) {
-			track_property_provider_v5_info_source_impl infoImpl(items, abort);
-			v5->enumerate_properties_v5(items, infoImpl, callback, abort);
-			return;
-		}
-		track_property_provider_v3_info_source* dummy = nullptr;
-		this->enumerate_properties_helper(items, dummy, callback, abort);
+		this->enumerate_properties_helper(items, nullptr, callback, abort);
 	} else {
 		{
 			track_property_provider_v5::ptr v5;
@@ -123,6 +116,17 @@ void track_property_provider::enumerate_properties_helper(trackListRef items, tr
 		wrap.chain = info;
 		this->enumerate_properties_helper(items, &wrap, callback, abort);
 	}
+}
+
+void track_property_provider::enumerate_properties_helper(trackListRef items, std::nullptr_t, track_property_callback_v2& callback, abort_callback& abort) {
+	track_property_provider_v5::ptr v5;
+	if (v5 &= this) {
+		track_property_provider_v5_info_source_impl infoImpl(items, abort);
+		v5->enumerate_properties_v5(items, infoImpl, callback, abort);
+		return;
+	}
+	track_property_provider_v3_info_source* dummy = nullptr;
+	this->enumerate_properties_helper(items, dummy, callback, abort);
 }
 
 void track_property_provider::enumerate_properties_helper(trackListRef items, track_property_provider_v3_info_source * info, track_property_callback_v2 & callback, abort_callback & abort) {

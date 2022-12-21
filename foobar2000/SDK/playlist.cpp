@@ -1,6 +1,12 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
+#include "playlist.h"
 
 namespace {
+	class enum_items_callback_func : public playlist_manager::enum_items_callback {
+	public:
+		bool on_item(t_size p_index, const metadb_handle_ptr& p_location, bool b_selected) override { return f(p_index, p_location, b_selected); }
+		playlist_manager::enum_items_func f;
+	};
 	class enum_items_callback_retrieve_item : public playlist_manager::enum_items_callback
 	{
 		metadb_handle_ptr m_item;
@@ -148,12 +154,20 @@ t_size playlist_manager::activeplaylist_get_item_count()
 	else return playlist_get_item_count(playlist);
 }
 
+void playlist_manager::playlist_enum_items(size_t which, enum_items_func f, const bit_array& mask) {
+	enum_items_callback_func cb; cb.f = f;
+	this->playlist_enum_items(which, cb, mask);
+}
+
 void playlist_manager::activeplaylist_enum_items(enum_items_callback & p_callback,const bit_array & p_mask)
 {
 	t_size playlist = get_active_playlist();
-	if (playlist != pfc_infinite) playlist_enum_items(playlist,p_callback,p_mask);
+	if (playlist != SIZE_MAX) playlist_enum_items(playlist,p_callback,p_mask);
 }
-
+void playlist_manager::activeplaylist_enum_items(enum_items_func f, const bit_array& mask) {
+	size_t playlist = get_active_playlist();
+	if (playlist != SIZE_MAX) playlist_enum_items(playlist, f, mask);
+}
 t_size playlist_manager::activeplaylist_get_focus_item()
 {
 	t_size playlist = get_active_playlist();
@@ -904,44 +918,43 @@ t_size playlist_manager_v3::recycler_find_by_id(t_uint32 id) {
 }
 
 
-void playlist_manager::on_file_rechaptered(const char * path, metadb_handle_list_cref newItems) {
-	if (newItems.get_size() == 0) return;
 
-	const size_t numPlaylists = this->get_playlist_count();
-	for( size_t walkPlaylist = 0; walkPlaylist < numPlaylists; ++ walkPlaylist ) {
-		if (!playlist_lock_is_present(walkPlaylist)) {
+typedef pfc::map_t< const char*, metadb_handle_list, metadb::path_comparator > byPath_t;
+static void rechapter_worker(playlist_manager* api, byPath_t const& byPath) {
+	if (byPath.get_count() == 0) return;
+	const size_t numPlaylists = api->get_playlist_count();
+	for (size_t walkPlaylist = 0; walkPlaylist < numPlaylists; ++walkPlaylist) {
+		if (!api->playlist_lock_is_present(walkPlaylist)) {
 			auto itemCount = [=] {
-				return this->playlist_get_item_count( walkPlaylist );
+				return api->playlist_get_item_count(walkPlaylist);
 			};
-			auto itemHandle = [=] ( size_t item ) -> metadb_handle_ptr {
-				return this->playlist_get_item_handle( walkPlaylist, item );
-			};
-			auto itemMatch = [=] ( size_t item ) -> bool {
-				return metadb::path_compare(path, itemHandle(item)->get_path()) == 0;
-			};
-			auto itemMatch2 = [=] ( metadb_handle_ptr item ) -> bool {
-				return metadb::path_compare(path, item->get_path() ) == 0;
+			auto itemHandle = [=](size_t item) -> metadb_handle_ptr {
+				return api->playlist_get_item_handle(walkPlaylist, item);
 			};
 
-			for( size_t walkItem = 0; walkItem < itemCount(); ) {
-
-				if (itemMatch( walkItem )) {
+			for (size_t walkItem = 0; walkItem < itemCount(); ) {
+				auto item = itemHandle(walkItem);
+				auto itemPath = item->get_path();
+				auto match = byPath.find(itemPath);
+				if (match.is_valid() ) {
 					pfc::avltree_t<uint32_t> subsongs;
 					auto base = walkItem;
 					bool bSel = false;
-					for( ++walkItem ; walkItem < itemCount() ; ++ walkItem ) {
-						auto handle = itemHandle( walkItem );
-						if (! itemMatch2( handle ) ) break;
-						if (! subsongs.add_item_check(handle->get_subsong_index())) break;
+					for (++walkItem; walkItem < itemCount(); ++walkItem) {
+						auto handle = itemHandle(walkItem);
+						if (metadb::path_compare(itemPath, handle->get_path()) != 0) break;
+						if (!subsongs.add_item_check(handle->get_subsong_index())) break;
 
-						bSel = bSel || this->playlist_is_item_selected(walkPlaylist, walkItem);
+						bSel = bSel || api->playlist_is_item_selected(walkPlaylist, walkItem);
 					}
 
+					const auto& newItems = match->m_value;
 					// REMOVE base ... walkItem range and insert newHandles at base
-					this->playlist_remove_items( walkPlaylist, pfc::bit_array_range(base, walkItem-base) );
-					this->playlist_insert_items( walkPlaylist, base, newItems, pfc::bit_array_val( bSel ) );
+					api->playlist_remove_items(walkPlaylist, pfc::bit_array_range(base, walkItem - base));
+					api->playlist_insert_items(walkPlaylist, base, newItems, pfc::bit_array_val(bSel));
 					walkItem = base + newItems.get_size();
-				} else {
+				}
+				else {
 					++walkItem;
 				}
 			}
@@ -958,7 +971,10 @@ void playlist_manager::on_files_rechaptered( metadb_handle_list_cref newHandles 
 		byPath[ handle->get_path() ] += handle;
 	}
 
-	for( auto iter = byPath.first(); iter.is_valid(); ++ iter ) {
-		this->on_file_rechaptered( iter->m_key, iter->m_value );
-	}
+	rechapter_worker(this, byPath);
+}
+
+void playlist_manager::on_file_rechaptered(const char* path, metadb_handle_list_cref newItems) {
+	// obsolete method
+	on_files_rechaptered(newItems);
 }

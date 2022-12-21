@@ -1,4 +1,5 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
+#include "titleformat.h"
 
 
 #define tf_profiler(x) // profiler(x)

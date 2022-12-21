@@ -1,5 +1,6 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
 #include "image.h"
+#include "album_art.h"
 
 namespace fb2k {
     bool imageSize_t::equals(imageSize_t const & v1, imageSize_t const & v2) {

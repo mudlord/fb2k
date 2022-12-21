@@ -122,15 +122,12 @@
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>C:\code\working\foobar2000\pfc;C:\code\working\foobar2000\libPPUI;$(IncludePath)</IncludePath>
-  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>foobar2000.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>foobar2000-sdk-pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -139,6 +136,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>..;..\..</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -153,7 +151,7 @@
       <Optimization>Disabled</Optimization>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>foobar2000.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>foobar2000-sdk-pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -162,6 +160,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>..;..\..</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -176,7 +175,7 @@
       <Optimization>Disabled</Optimization>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>foobar2000.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>foobar2000-sdk-pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -185,6 +184,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>..;..\..</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -199,7 +199,7 @@
       <Optimization>Disabled</Optimization>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>foobar2000.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>foobar2000-sdk-pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -208,6 +208,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>..;..\..</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -225,7 +226,7 @@
       <FloatingPointModel>Fast</FloatingPointModel>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>foobar2000.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>foobar2000-sdk-pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -238,6 +239,7 @@
       <PreprocessorDefinitions>NDEBUG;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;..\..</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -255,7 +257,7 @@
       <FloatingPointModel>Fast</FloatingPointModel>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>foobar2000.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>foobar2000-sdk-pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -268,6 +270,7 @@
       <PreprocessorDefinitions>NDEBUG;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;..\..</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -285,7 +288,7 @@
       <FloatingPointModel>Fast</FloatingPointModel>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>foobar2000.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>foobar2000-sdk-pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -298,6 +301,7 @@
       <PreprocessorDefinitions>NDEBUG;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;..\..</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -315,7 +319,7 @@
       <FloatingPointModel>Fast</FloatingPointModel>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>foobar2000.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>foobar2000-sdk-pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -328,6 +332,7 @@
       <PreprocessorDefinitions>NDEBUG;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;..\..</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -366,6 +371,7 @@
     <ClInclude Include="console_manager.h" />
     <ClInclude Include="contextmenu.h" />
     <ClInclude Include="contextmenu_manager.h" />
+    <ClInclude Include="coreDarkMode.h" />
     <ClInclude Include="core_api.h" />
     <ClInclude Include="coreversion.h" />
     <ClInclude Include="decode_postprocessor.h" />
@@ -388,8 +394,10 @@
     <ClInclude Include="filesystem.h" />
     <ClInclude Include="filesystem_helper.h" />
     <ClInclude Include="foobar2000-all.h" />
-    <ClInclude Include="foobar2000-dsp.h" />
+    <ClInclude Include="foobar2000-lite.h" />
     <ClInclude Include="foobar2000-pfc.h" />
+    <ClInclude Include="foobar2000-sdk-pch.h" />
+    <ClInclude Include="foobar2000-versions.h" />
     <ClInclude Include="foobar2000-winver.h" />
     <ClInclude Include="foobar2000.h" />
     <ClInclude Include="foosort.h" />
@@ -453,6 +461,7 @@
     <ClInclude Include="tag_processor.h" />
     <ClInclude Include="threaded_process.h" />
     <ClInclude Include="threadPool.h" />
+    <ClInclude Include="threadsLite.h" />
     <ClInclude Include="timer.h" />
     <ClInclude Include="titleformat.h" />
     <ClInclude Include="toolbarDropDown.h" />
@@ -472,6 +481,7 @@
     <ClCompile Include="app_close_blocker.cpp" />
     <ClCompile Include="audio_chunk.cpp" />
     <ClCompile Include="audio_chunk_channel_config.cpp" />
+    <ClCompile Include="cfg_var.cpp" />
     <ClCompile Include="cfg_var_legacy.cpp" />
     <ClCompile Include="chapterizer.cpp" />
     <ClCompile Include="commandline.cpp" />
@@ -546,7 +556,6 @@
     </ClCompile>
     <ClCompile Include="replaygain_info.cpp">
     </ClCompile>
-    <ClCompile Include="search_tools.cpp" />
     <ClCompile Include="service.cpp">
     </ClCompile>
     <ClCompile Include="stdafx.cpp">

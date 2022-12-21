@@ -1,19 +1,23 @@
 #ifndef FREEVERB_H
 #define FREEVERB_H
 
+
+#include "../SDK/foobar2000.h"
+
 // FIXME: Fix this really ugly hack
-inline float undenormalise(void *sample) {
-	if (((*(unsigned int*)sample) &  0x7f800000) == 0)
+inline float undenormalise(void* sample) {
+	if (((*(unsigned int*)sample) & 0x7f800000) == 0)
 		return 0.0f;
 	return *(float*)sample;
 }
 
 
+
 class comb {
 public:
 	comb();
-	void setbuffer(float *buf, int size);
-	inline float process(float inp);
+	void setbuffer(audio_sample *buf, int size);
+	inline audio_sample process(audio_sample inp);
 	void mute();
 	void setdamp(float val);
 	float getdamp();
@@ -21,16 +25,16 @@ public:
 	float getfeedback();
 private:
 	float feedback;
-	float filterstore;
+	audio_sample filterstore;
 	float damp1;
 	float damp2;
-	float *buffer;
+	audio_sample *buffer;
 	int bufsize;
 	int bufidx;
 };
 
-inline float comb::process(float input) {
-	float output;
+inline audio_sample comb::process(audio_sample input) {
+	audio_sample output=0.0;
 
 	output = buffer[bufidx];
 	undenormalise(&output);
@@ -49,21 +53,21 @@ inline float comb::process(float input) {
 class allpass {
 public:
 	allpass();
-	void setbuffer(float *buf, int size);
-	inline float process(float inp);
+	void setbuffer(audio_sample *buf, int size);
+	inline audio_sample process(audio_sample inp);
 	void mute();
 	void setfeedback(float val);
 	float getfeedback();
 private:
 	float feedback;
-	float *buffer;
+	audio_sample *buffer;
 	int bufsize;
 	int bufidx;
 };
 
-inline float allpass::process(float input) {
-	float output;
-	float bufout;
+inline audio_sample allpass::process(audio_sample input) {
+	audio_sample output=0.0;
+	audio_sample bufout=0.0;
 
 	bufout = buffer[bufidx];
 	undenormalise(&bufout);
@@ -104,8 +108,8 @@ public:
 	revmodel();
 	~revmodel();
 	void mute();
-	void init(int srate);
-	float revmodel::processsample(float in);
+	void init(int srate,bool stereo);
+	audio_sample revmodel::processsample(audio_sample in);
 	void setroomsize(float value);
 	float getroomsize();
 	void setdamp(float value);
@@ -135,8 +139,8 @@ private:
 	allpass	allpassL[numallpasses];
 
 
-	float **bufcomb;
-	float **bufallpass;
+	audio_sample **bufcomb;
+	audio_sample **bufallpass;
 };
 
 #endif

@@ -1,6 +1,8 @@
 #pragma once
 
 #ifdef FOOBAR2000_HAVE_CFG_VAR_LEGACY
+#include <vector>
+#include "filesystem.h" // stream_reader, stream_writer
 
 namespace cfg_var_legacy {
 #define CFG_VAR_ASSERT_SAFEINIT PFC_ASSERT(!core_api::are_services_available());/*imperfect check for nonstatic instantiation*/
@@ -147,7 +149,7 @@ namespace cfg_var_legacy {
 	template<typename t_struct>
 	class cfg_struct_t : public cfg_var {
 	private:
-		t_struct m_val;
+		t_struct m_val = {};
 	protected:
 
 		void get_data_raw(stream_writer* p_stream, abort_callback& p_abort) { p_stream->write_object(&m_val, sizeof(m_val), p_abort); }
@@ -161,6 +163,8 @@ namespace cfg_var_legacy {
 		inline cfg_struct_t(const GUID& p_guid, const t_struct& p_val) : cfg_var(p_guid), m_val(p_val) {}
 		//! @param p_guid GUID of the variable, used to identify variable implementations owning specific configuration file entries when reading the configuration file back. You must generate a new GUID every time you declare a new cfg_var.
 		inline cfg_struct_t(const GUID& p_guid, int filler) : cfg_var(p_guid) { memset(&m_val, filler, sizeof(t_struct)); }
+		//! @param p_guid GUID of the variable, used to identify variable implementations owning specific configuration file entries when reading the configuration file back. You must generate a new GUID every time you declare a new cfg_var.
+		inline cfg_struct_t(const GUID& p_guid) : cfg_var(p_guid) {}
 
 		inline const cfg_struct_t<t_struct>& operator=(const cfg_struct_t<t_struct>& p_val) { m_val = p_val.get_value(); return *this; }
 		inline const cfg_struct_t<t_struct>& operator=(const t_struct& p_val) { m_val = p_val; return *this; }
@@ -168,13 +172,18 @@ namespace cfg_var_legacy {
 		inline const t_struct& get_value() const { return m_val; }
 		inline t_struct& get_value() { return m_val; }
 		inline operator t_struct() const { return m_val; }
+
+		void set(t_struct&& arg) { m_val = std::move(arg); }
+		void set(t_struct const& arg) { m_val = arg; }
+		t_struct get() const { return m_val; }
 	};
 
 
 	template<typename TObj>
 	class cfg_objList : public cfg_var, public pfc::list_t<TObj> {
 	public:
-		typedef cfg_objList<TObj> t_self;
+		typedef TObj item_t;
+		typedef cfg_objList<item_t> t_self;
 		cfg_objList(const GUID& guid) : cfg_var(guid) {}
 		template<typename TSource, unsigned Count> cfg_objList(const GUID& guid, const TSource(&source)[Count]) : cfg_var(guid) {
 			reset(source);
@@ -201,6 +210,20 @@ namespace cfg_var_legacy {
 		template<typename t_in> t_self& operator=(t_in const& source) { this->remove_all(); this->add_items(source); return *this; }
 		template<typename t_in> t_self& operator+=(t_in const& p_source) { this->add_item(p_source); return *this; }
 		template<typename t_in> t_self& operator|=(t_in const& p_source) { this->add_items(p_source); return *this; }
+
+
+		std::vector<item_t> get() const {
+			std::vector<item_t> ret; ret.reserve(this->size());
+			for (auto& item : *this) ret.push_back(item);
+			return ret;
+		}
+		template<typename arg_t> void set(arg_t&& arg) {
+			this->remove_all();
+			this->prealloc(std::size(arg));
+			for (auto& item : arg) {
+				this->add_item(item);
+			}
+		}
 	};
 	template<typename TList>
 	class cfg_objListEx : public cfg_var, public TList {
@@ -233,6 +256,8 @@ namespace cfg_var_legacy {
 
 		TObj& val() { return *this; }
 		TObj const& val() const { return *this; }
+		TObj get() const { return val(); }
+		template<typename arg_t> void set(arg_t&& arg) { val() = std::forward<arg_t>(arg); }
 
 		void get_data_raw(stream_writer* p_stream, abort_callback& p_abort) {
 			stream_writer_formatter<> out(*p_stream, p_abort);

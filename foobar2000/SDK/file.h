@@ -17,9 +17,9 @@ namespace foobar2000_io
 	//! Invalid/unknown file timestamp constant. Also see: t_filetimestamp.
 	const t_filetimestamp filetimestamp_invalid = 0;
 	//! Invalid/unknown file size constant. Also see: t_filesize.
-	static const t_filesize filesize_invalid = (t_filesize)(UINT64_MAX);
+	static constexpr t_filesize filesize_invalid = (t_filesize)(UINT64_MAX);
 
-	static const t_filetimestamp filetimestamp_1second_increment = 10000000;
+	static constexpr t_filetimestamp filetimestamp_1second_increment = 10000000;
 
 	//! Stores file stats (size and timestamp).
 	struct t_filestats {
@@ -102,8 +102,8 @@ namespace foobar2000_io
 	};
 
 	//! Invalid/unknown file stats constant. See: t_filestats.
-	static const t_filestats filestats_invalid = t_filestats();
-	static const t_filestats2 filestats2_invalid = t_filestats2();
+	static constexpr t_filestats filestats_invalid = t_filestats();
+	static constexpr t_filestats2 filestats2_invalid = t_filestats2();
 
 	//! Struct to be used with guid_getFileTimes / guid_setFileTimes.
 	struct filetimes_t {

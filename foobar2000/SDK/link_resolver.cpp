@@ -1,4 +1,4 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
 #include "link_resolver.h"
 
 bool link_resolver::g_find(service_ptr_t<link_resolver> & p_out,const char * p_path)

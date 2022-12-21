@@ -1,10 +1,7 @@
-#include "foobar2000.h" // PCH
-#ifdef FOOBAR2000_MODERN
-#include "foobar2000-input.h"
-#include <pfc/list.h>
-#include <pfc/timers.h>
-#endif
+#include "foobar2000-sdk-pch.h"
 #include <exception>
+#include "input.h"
+#include "input_impl.h"
 #include "album_art.h"
 #include "file_info_impl.h"
 
@@ -246,25 +243,8 @@ service_ptr input_manager::open_v2(const GUID & whatFor, file::ptr hint, const c
 service_ptr input_entry::g_open(const GUID & whatFor, file::ptr p_filehint, const char * p_path, event_logger::ptr logger, abort_callback & p_abort, bool p_from_redirect) {
 
 #ifdef FOOBAR2000_DESKTOP
-
-	// #define rationale: not all FOOBAR2000_MODERN flavours come with input_manager implementation, but classic 1.4+ does
-#if !defined(FOOBAR2000_MODERN) && FOOBAR2000_TARGET_VERSION >= 79
-
-#if FOOBAR2000_TARGET_VERSION > 79
 	return input_manager_v2::get()->open_v2(whatFor, p_filehint, p_path, p_from_redirect, logger, p_abort);
-#else
-	return input_manager::get()->open_v2(whatFor, p_filehint, p_path, p_from_redirect, logger, p_abort);
-#endif
-
-#endif
-	{
-		auto m = input_manager::tryGet();
-		if (m.is_valid()) {
-			return m->open_v2(whatFor, p_filehint, p_path, p_from_redirect, logger, p_abort);
-		}
-	}
-#endif
-
+#else // FOOBAR2000_DESKTOP or not
 	const bool needWriteAcecss = !!(whatFor == input_info_writer::class_guid);
 
 	service_ptr_t<file> l_file = p_filehint;
@@ -307,6 +287,7 @@ service_ptr input_entry::g_open(const GUID & whatFor, file::ptr p_filehint, cons
 	}
 
 	throw exception_io_unsupported_format();
+#endif // not FOOBAR2000_DESKTOP
 }
 
 void input_entry::g_open_for_decoding(service_ptr_t<input_decoder> & p_instance,service_ptr_t<file> p_filehint,const char * p_path,abort_callback & p_abort,bool p_from_redirect) {

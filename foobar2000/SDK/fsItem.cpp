@@ -1,4 +1,4 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
 
 
 t_filestats2 fsItemBase::getStatsOpportunist() {

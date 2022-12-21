@@ -104,8 +104,7 @@ int ui_color_to_sys_color_index(const GUID & p_guid);
 GUID ui_color_from_sys_color_index( int idx );
 
 struct ui_element_min_max_info {
-	ui_element_min_max_info() : m_min_width(0), m_max_width(~0), m_min_height(0), m_max_height(~0) {}
-	t_uint32 m_min_width, m_max_width, m_min_height, m_max_height;
+	t_uint32 m_min_width = 0, m_max_width = UINT32_MAX, m_min_height = 0, m_max_height = UINT32_MAX;
 
 	const ui_element_min_max_info & operator|=(const ui_element_min_max_info & p_other);
 	ui_element_min_max_info operator|(const ui_element_min_max_info & p_other) const;
@@ -272,7 +271,7 @@ public:
 
 	//! Returns GUID of the element. The return value must be the same as your ui_element::get_guid().
 	virtual GUID get_guid() = 0;
-	//! Returns subclass GUID of the element. The return value must be the same as your ui_element::get_guid().
+	//! Returns subclass GUID of the element. The return value must be the same as your ui_element::get_subclass().
 	virtual GUID get_subclass() = 0;
 
 	//! Returns element's focus priority.
@@ -599,10 +598,13 @@ bool ui_element_subclass_description(const GUID & id, pfc::string_base & out);
 #define AddNewUIElementCommand "Add New UI Element..."
 #define AddNewUIElementDescription "Replaces the selected empty space with a new UI Element."
 
-
+//! \since 2.0
 class NOVTABLE ui_config_callback {
 public:
+	//! Called when user changes configuration of fonts.
 	virtual void ui_fonts_changed() {}
+	//! Called when user changes configuration of colors (also as a result of toggling dark mode). \n
+	//! Note that for the duration of these callbacks, both old handles previously returned by query_font() as well as new ones are valid; old font objects are released when the callback cycle is complete.
 	virtual void ui_colors_changed() {}
 };
 
@@ -613,16 +615,27 @@ public:
 	virtual void add_callback(ui_config_callback*) = 0;
 	virtual void remove_callback(ui_config_callback*) = 0;
 
+	//! Queries actual color to be used for the specified ui_color_* element.
+	//! @returns True if color is user-overridden, false if system-default color should be used.
 	virtual bool query_color(const GUID& p_what, t_ui_color& p_out) = 0;
+	//! Queries font to be used for the specified ui_font_* element. \n
+	//! The returned font handle is valid until the next font change callback cycle *completes*, that is, during a font change callback, both old and new handle are momentarily valid.
 	virtual t_ui_font query_font(const GUID& p_what) = 0;	
 
+	//! Helper using query_color(); returns true if dark mode is in effect, false otherwise.
 	bool is_dark_mode();
 
 #ifdef _WIN32
 	t_ui_color getSysColor(int sysColorIndex);
 #endif
+
+	//! Special method that's safe to call without checking if ui_config_manager exists, that is, it works on foobar2000 < 2.0.
+	//! Returns false if ui_conifg_manager doesn't exist and therefore dark mode isn't supported by this foobar2000 revision.
+	static bool g_is_dark_mode();
 };
 
+//! \since 2.0
+//! Does nothing (fails to register quietly) if used in fb2k prior to 2.0
 class ui_config_callback_impl : public ui_config_callback {
 public:
 	ui_config_callback_impl();

@@ -1,4 +1,7 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
+#include "menu_helpers.h"
+#include "metadb.h"
+#include "playlist.h"
 
 
 bool menu_helpers::context_get_description(const GUID& p_guid,pfc::string_base & out) {

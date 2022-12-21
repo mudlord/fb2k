@@ -212,10 +212,7 @@ public:
 	template<typename source_t>
 	void forcedCastFrom(source_t const & other) {
 		if (!other->cast(*this)) {
-#if PFC_DEBUG
-			FB2K_DebugLog() << "Forced cast failure: " << pfc::print_guid(T::class_guid);
-#endif
-			uBugCheck();
+			FB2K_BugCheckEx("forced cast failure");
 		}
 	}
 };
@@ -437,10 +434,6 @@ public:
 
 	static bool serviceRequiresMainThreadDestructor() { return false; }
 
-#ifdef FOOBAR2000_MODERN
-    static bool shouldRegisterService() { return true; }
-#endif
-
 	service_base * as_service_base() { return this; }
 protected:
 	service_base() {}
@@ -491,9 +484,6 @@ public:
 
 	//! Throws std::bad_alloc or another exception on failure.
 	virtual void instance_create(service_ptr_t<service_base> & p_out) = 0;
-#ifdef FOOBAR2000_MODERN
-    virtual bool should_register() { return true; }
-#endif
 
 	//! FOR INTERNAL USE ONLY
 	static service_factory_base *__internal__list;
@@ -518,7 +508,7 @@ public:
 protected:
 	template<typename in_t>
 	static void pass_instance(service_ptr& out, in_t* in) {
-		// in_t could be multi inherited, fix mulit inheritance issues here
+		// in_t could be multi inherited, fix multi inheritance issues here
 		// caller will static cast the returned service_base* to B* later on
 		// make sure that what we hand over supports such
 		service_ptr_t< B > temp;
@@ -781,9 +771,6 @@ public:
 	void instance_create(service_ptr_t<service_base> & p_out) override {
 		this->pass_instance(p_out, new service_impl_t<T>);
 	}
-#ifdef FOOBAR2000_MODERN
-    bool should_register() override { return T::shouldRegisterService(); }
-#endif
 };
 
 
@@ -796,9 +783,6 @@ public:
 	void instance_create(service_ptr_t<service_base> & p_out) override {
 		this->pass_instance(p_out, &g_instance);
 	}
-#ifdef FOOBAR2000_MODERN
-    bool should_register() override { return g_instance.shouldRegisterService(); }
-#endif
 
 	inline T& get_static_instance() { return g_instance; }
 	inline const T& get_static_instance() const { return g_instance; }
@@ -816,9 +800,6 @@ public:
 	void instance_create(service_ptr_t<service_base> & p_out) override {
 		this->pass_instance(p_out, get());
 	}
-#ifdef FOOBAR2000_MODERN
-	bool should_register() override { return T::shouldRegisterService(); }
-#endif
 };
 
 template<typename T>
@@ -832,9 +813,6 @@ public:
 	void instance_create(service_ptr_t<service_base> & p_out) override {
 		this->pass_instance(p_out, &instance);
 	}
-#ifdef FOOBAR2000_MODERN
-	bool should_register() override { return instance.shouldRegisterService(); }
-#endif
 
 	inline T& get_static_instance() { return instance; }
 };
@@ -848,9 +826,6 @@ public:
 	void instance_create(service_ptr_t<service_base> & p_out) override {
 		this->pass_instance(p_out, pfc::implicit_cast<T*>(this));
 	}
-#ifdef FOOBAR2000_MODERN
-    bool should_register() override { return this->shouldRegisterService(); }
-#endif
 
     inline T& get_static_instance() {return *(T*)this;}
     inline const T& get_static_instance() const {return *(const T*)this;}

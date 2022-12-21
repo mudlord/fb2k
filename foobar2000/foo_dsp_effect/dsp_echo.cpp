@@ -1,11 +1,42 @@
 #define MYVERSION "0.6"
 #include "../helpers/foobar2000+atl.h"
+#include <coreDarkMode.h>
+#include "../SDK/ui_element.h"
 #include "../helpers/BumpableElem.h"
+#include "../../libPPUI/CDialogResizeHelper.h"
 #include "resource.h"
 #include "echo.h"
 #include "dsp_guids.h"
 
 namespace {
+
+	class CEditMod : public CWindowImpl<CEditMod, CEdit >
+	{
+	public:
+		BEGIN_MSG_MAP(CEditMod)
+			MESSAGE_HANDLER(WM_CHAR, OnChar)
+		END_MSG_MAP()
+
+		CEditMod(HWND hWnd = NULL) { }
+		LRESULT OnChar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+		{
+			switch (wParam)
+			{
+			case '\r': //Carriage return
+				::PostMessage(m_parent, WM_USER, 0x1988, 0L);
+				return 0;
+				break;
+			}
+			return DefWindowProc(uMsg, wParam, lParam);
+		}
+		void AttachToDlgItem(HWND parent)
+		{
+			m_parent = parent;
+		}
+	private:
+		UINT m_dlgItem;
+		HWND m_parent;
+	};
 
 	static void RunDSPConfigPopup(const dsp_preset & p_data, HWND p_parent, dsp_preset_edit_callback & p_callback);
 
@@ -110,13 +141,37 @@ namespace {
 
 	static dsp_factory_t<dsp_echo> g_dsp_echo_factory;
 
+
+	static const CDialogResizeHelper::Param chorus_uiresize[] = {
+		// Dialog resize handling matrix, defines how the controls scale with the dialog
+		//			 L T R B
+		{IDC_STATIC1, 0,0,0,0 },
+		{IDC_STATIC2,    0,0,0,0  },
+		{IDC_STATIC3,   0,0,0,0 },
+		{IDC_EDITECHODELAYELEM, 0,0,0,0 },
+		{IDC_EDITECHOVOLELEM,  0,0,0,0 },
+	{IDC_EDITECHOFEEDELEM,  0,0,0,0 },
+	{IDC_RESETCHR5,  0,0,0,0 },
+	{IDC_ECHOENABLED,  0,0,0,0},
+	{IDC_SLIDER_MS1, 0,0,1,0},
+	{IDC_SLIDER_AMP1, 0,0,1,0},
+	{IDC_SLIDER_FB1, 0,0,1,0},
+	// current position of a control is determined by initial_position + factor * (current_dialog_size - initial_dialog_size)
+	// where factor is the value from the table above
+	// applied to all four values - left, top, right, bottom
+	// 0,0,0,0 means that a control doesn't react to dialog resizing (aligned to top+left, no resize)
+	// 1,1,1,1 means that the control is aligned to bottom+right but doesn't resize
+	// 0,0,1,0 means that the control disregards vertical resize (aligned to top) and changes its width with the dialog
+	};
+	static const CRect resizeMinMax(150, 150, 1000, 1000);
+
 	// {1DC17CA0-0023-4266-AD59-691D566AC291}
 	static const GUID guid_choruselem
 	{ 0x634933f1, 0xbdb6, 0x4d4c,{ 0x8a, 0x68, 0x28, 0xb9, 0xd, 0xc0, 0xfe, 0x3 } };
 
 	class uielem_echo : public CDialogImpl<uielem_echo>, public ui_element_instance {
 	public:
-		uielem_echo(ui_element_config::ptr cfg, ui_element_instance_callback::ptr cb) : m_callback(cb) {
+		uielem_echo(ui_element_config::ptr cfg, ui_element_instance_callback::ptr cb) : m_callback(cb), m_resizer(chorus_uiresize, resizeMinMax) {
 			ms = 200;
 			amp = 128;
 			feedback = 128;
@@ -137,9 +192,12 @@ namespace {
 			AmpRangeTotal = AmpRangeMax - AmpRangeMin
 		};
 		BEGIN_MSG_MAP(uielem_echo)
+			CHAIN_MSG_MAP_MEMBER(m_resizer)
 			MSG_WM_INITDIALOG(OnInitDialog)
 			COMMAND_HANDLER_EX(IDC_ECHOENABLED, BN_CLICKED, OnEnabledToggle)
 			MSG_WM_HSCROLL(OnScroll)
+			COMMAND_HANDLER_EX(IDC_RESETCHR5, BN_CLICKED, OnReset5)
+			MESSAGE_HANDLER(WM_USER, OnEditControlChange)
 		END_MSG_MAP()
 
 
@@ -178,15 +236,24 @@ namespace {
 			}
 
 
-			ret.m_min_width = MulDiv(420, DPI.cx, 96);
-			ret.m_min_height = MulDiv(240, DPI.cy, 96);
-			ret.m_max_width = MulDiv(420, DPI.cx, 96);
-			ret.m_max_height = MulDiv(240, DPI.cy, 96);
+			ret.m_min_width = MulDiv(150, DPI.cx, 96);
+			ret.m_min_height = MulDiv(150, DPI.cy, 96);
+			ret.m_max_width = MulDiv(1000, DPI.cx, 96);
+			ret.m_max_height = MulDiv(1000, DPI.cy, 96);
 
 			// Deal with WS_EX_STATICEDGE and alike that we might have picked from host
 			ret.adjustForWindow(*this);
 
 			return ret;
+		}
+
+		LRESULT OnEditControlChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+		{
+			if (wParam == 0x1988)
+			{
+				GetEditText();
+			}
+			return 0;
 		}
 
 	private:
@@ -277,6 +344,46 @@ namespace {
 
 		}
 
+		void GetEditText()
+		{
+			bool preset_changed = false;
+			dsp_preset_impl preset;
+			CString text, text2, text3, text4;
+			delay_edit.GetWindowText(text);
+			int delay2 = pfc::clip_t<t_int32>(_ttoi(text), 10, 5000);
+
+			if (delay_s != text)
+			{
+				ms = delay2;
+				preset_changed = true;
+			}
+
+			vol_edit.GetWindowText(text2);
+			float depth2 = pfc::clip_t<t_int32>(_ttoi(text2), 0, 100);
+			if (vol_s != text2)
+			{
+				preset_changed = true;
+				amp = (depth2 / 100 * 256);
+			}
+
+
+			feed_edit.GetWindowText(text3);
+			float lfo = pfc::clip_t<t_int32>(_ttoi(text3), 0, 100);
+			if (feed_s != text3)
+			{
+				preset_changed = true;
+				feedback = (lfo / 100 * 256);
+			}
+
+			if (preset_changed)
+			{
+				SetConfig();
+				OnConfigChanged();
+			}
+				
+
+		}
+
 
 		void GetConfig()
 		{
@@ -289,14 +396,29 @@ namespace {
 
 		}
 
+		void OnReset5(UINT, int id, CWindow)
+		{
+			Reset();
+		}
+
+		void Reset()
+		{
+			ms = 200; amp = 128, feedback = 128;
+			SetConfig();
+			if (IsEchoEnabled())
+			{
+
+				OnConfigChanged();
+			}
+
+		}
+
 		void SetConfig()
 		{
 			m_slider_ms.SetPos(pfc::clip_t<t_int32>(ms, MSRangeMin, MSRangeMax) - MSRangeMin);
 			m_slider_amp.SetPos(pfc::clip_t<t_int32>(amp, AmpRangeMin, AmpRangeMax) - AmpRangeMin);
 			m_slider_fb.SetPos(pfc::clip_t<t_int32>(feedback, AmpRangeMin, AmpRangeMax) - AmpRangeMin);
-
 			RefreshLabel(ms, amp, feedback);
-
 		}
 
 		BOOL OnInitDialog(CWindow, LPARAM)
@@ -315,25 +437,49 @@ namespace {
 			m_buttonEchoEnabled = GetDlgItem(IDC_ECHOENABLED);
 			m_ownEchoUpdate = false;
 
+			delay_edit.AttachToDlgItem(m_hWnd);
+			delay_edit.SubclassWindow(GetDlgItem(IDC_EDITECHODELAYELEM));
+			vol_edit.AttachToDlgItem(m_hWnd);
+			vol_edit.SubclassWindow(GetDlgItem(IDC_EDITECHOVOLELEM));
+			feed_edit.AttachToDlgItem(m_hWnd);
+			feed_edit.SubclassWindow(GetDlgItem(IDC_EDITECHOFEEDELEM));
+
 			ApplySettings();
+			m_hooks.AddDialogWithControls(m_hWnd);
 			return TRUE;
 		}
 
 		void RefreshLabel(int ms, int amp, int feedback)
 		{
-			pfc::string_formatter msg; msg << "Delay time: " << pfc::format_int(ms) << " ms";
-			::uSetDlgItemText(*this, IDC_SLIDER_LABEL_MS1, msg);
-			msg.reset(); msg << "Echo volume: " << pfc::format_int(amp * 100 / 256) << "%";
-			::uSetDlgItemText(*this, IDC_SLIDER_LABEL_AMP1, msg);
-			msg.reset(); msg << "Echo feedback: " << pfc::format_int(feedback * 100 / 256) << "%";
-			::uSetDlgItemText(*this, IDC_SLIDER_LABEL_FB1, msg);
+			CString sWindowText;
+			pfc::string_formatter msg;
+			msg << pfc::format_int(ms);
+			sWindowText = msg.c_str();
+			delay_s = sWindowText;
+			delay_edit.SetWindowText(sWindowText);
+			msg.reset();
+			
+			msg << pfc::format_int(amp * 100 / 256);
+			sWindowText = msg.c_str();
+			vol_s = sWindowText;
+			vol_edit.SetWindowText(sWindowText);
+			msg.reset();
+			msg << pfc::format_int(feedback * 100 / 256);
+			sWindowText = msg.c_str();
+			feed_s = sWindowText;
+			feed_edit.SetWindowText(sWindowText);
 		}
-
+		fb2k::CCoreDarkModeHooks m_hooks;
 		bool echo_enabled;
 		int ms, amp, feedback;
 		CTrackBarCtrl m_slider_ms, m_slider_amp, m_slider_fb;
 		CButton m_buttonEchoEnabled;
 		bool m_ownEchoUpdate;
+		CDialogResizeHelper m_resizer;
+
+
+		CEditMod delay_edit, vol_edit, feed_edit;
+		CString delay_s, vol_s, feed_s;
 
 		static uint32_t parseConfig(ui_element_config::ptr cfg) {
 			return 1;
@@ -372,6 +518,13 @@ namespace {
 			return true;
 		}
 
+		bool get_popup_specs(ui_size& defSize, pfc::string_base& title)
+		{
+			defSize = { 150,150 };
+			title = "Echo DSP";
+			return true;
+		}
+
 	};
 	static service_factory_single_t<myElem_t> g_myElemFactory;
 
@@ -401,15 +554,70 @@ namespace {
 			COMMAND_HANDLER_EX(IDOK, BN_CLICKED, OnButton)
 			COMMAND_HANDLER_EX(IDCANCEL, BN_CLICKED, OnButton)
 			MSG_WM_HSCROLL(OnHScroll)
+			MESSAGE_HANDLER(WM_USER, OnEditControlChange)
+			COMMAND_HANDLER_EX(IDC_RESETCHR6, BN_CLICKED, OnReset5)
 		END_MSG_MAP()
 
 	private:
+		LRESULT OnEditControlChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+		{
+			if (wParam == 0x1988)
+			{
+				GetEditText();
+			}
+			return 0;
+		}
+
 		void DSPConfigChange(dsp_chain_config const & cfg)
 		{
 			if (m_hWnd != NULL) {
 				ApplySettings();
 			}
 		}
+
+		void GetEditText()
+		{
+			bool preset_changed = false;
+			dsp_preset_impl preset;
+			CString text, text2, text3, text4;
+			delay_edit.GetWindowText(text);
+			float delay2 = pfc::clip_t<t_int32>(_ttoi(text), 10, 5000);
+			if (delay_s != text)
+			{
+				ms = delay2;
+				preset_changed = true;
+			}
+
+			vol_edit.GetWindowText(text2);
+			float depth2 = pfc::clip_t<t_int32>(_ttoi(text2), 0, 100);
+			if (vol_s != text2)
+			{
+				preset_changed = true;
+				amp = (depth2 / 100 * 256);
+				amp = depth2;
+			}
+
+
+			feed_edit.GetWindowText(text3);
+			float lfo = pfc::clip_t<t_int32>(_ttoi(text3), 0, 100);
+			if (feed_s != text3)
+			{
+				preset_changed = true;
+				feedback = (lfo / 100 * 256);
+			}
+
+			if (preset_changed)
+			{
+				m_slider_ms.SetPos(pfc::clip_t<t_int32>(ms, MSRangeMin, MSRangeMax) - MSRangeMin);
+				m_slider_amp.SetPos(pfc::clip_t<t_int32>(amp, AmpRangeMin, AmpRangeMax) - AmpRangeMin);
+				m_slider_fb.SetPos(pfc::clip_t<t_int32>(feedback, AmpRangeMin, AmpRangeMax) - AmpRangeMin);
+				dsp_preset_impl preset;
+				dsp_echo::make_preset(ms, amp, feedback, true, preset);
+				m_callback.on_preset_changed(preset);
+				RefreshLabel(ms, amp, feedback);
+			}
+		}
+
 
 		void ApplySettings()
 		{
@@ -435,6 +643,13 @@ namespace {
 			m_slider_fb = GetDlgItem(IDC_SLIDER_FB);
 			m_slider_fb.SetRange(0, AmpRangeTotal);
 
+			delay_edit.AttachToDlgItem(m_hWnd);
+			delay_edit.SubclassWindow(GetDlgItem(IDC_EDITECHODELAY));
+			vol_edit.AttachToDlgItem(m_hWnd);
+			vol_edit.SubclassWindow(GetDlgItem(IDC_EDITECHOVOL));
+			feed_edit.AttachToDlgItem(m_hWnd);
+			feed_edit.SubclassWindow(GetDlgItem(IDC_EDITECHOFEED));
+
 			{
 
 				bool enabled = true;
@@ -444,12 +659,25 @@ namespace {
 				m_slider_fb.SetPos(pfc::clip_t<t_int32>(feedback, AmpRangeMin, AmpRangeMax) - AmpRangeMin);
 				RefreshLabel(ms, amp, feedback);
 			}
+			m_hooks.AddDialogWithControls(m_hWnd);
 			return TRUE;
 		}
 
 		void OnButton(UINT, int id, CWindow)
 		{
 			EndDialog(id);
+		}
+
+		void OnReset5(UINT, int id, CWindow)
+		{
+			ms = 200; amp = 128, feedback = 128;
+			m_slider_ms.SetPos(pfc::clip_t<t_int32>(ms, MSRangeMin, MSRangeMax) - MSRangeMin);
+			m_slider_amp.SetPos(pfc::clip_t<t_int32>(amp, AmpRangeMin, AmpRangeMax) - AmpRangeMin);
+			m_slider_fb.SetPos(pfc::clip_t<t_int32>(feedback, AmpRangeMin, AmpRangeMax) - AmpRangeMin);
+			dsp_preset_impl preset;
+			dsp_echo::make_preset(ms, amp, feedback, true, preset);
+			m_callback.on_preset_changed(preset);
+			RefreshLabel(ms, amp, feedback);
 		}
 
 		void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar pScrollBar)
@@ -468,18 +696,30 @@ namespace {
 
 		void RefreshLabel(int ms, int amp, int feedback)
 		{
-			pfc::string_formatter msg; msg << "Delay time: " << pfc::format_int(ms) << " ms";
-			::uSetDlgItemText(*this, IDC_SLIDER_LABEL_MS, msg);
-			msg.reset(); msg << "Echo volume: " << pfc::format_int(amp * 100 / 256) << "%";
-			::uSetDlgItemText(*this, IDC_SLIDER_LABEL_AMP, msg);
-			msg.reset(); msg << "Echo feedback: " << pfc::format_int(feedback * 100 / 256) << "%";
-			::uSetDlgItemText(*this, IDC_SLIDER_LABEL_FB, msg);
+			CString sWindowText;
+			pfc::string_formatter msg;
+			msg << pfc::format_int(ms);
+			sWindowText = msg.c_str();
+			delay_s = sWindowText;
+			delay_edit.SetWindowText(sWindowText);
+			msg.reset();
+			msg << pfc::format_int(amp * 100 / 256);
+			sWindowText = msg.c_str();
+			vol_s = sWindowText;
+			vol_edit.SetWindowText(sWindowText);
+			msg.reset();
+			msg << pfc::format_int(feedback * 100 / 256);
+			sWindowText = msg.c_str();
+			feed_s = sWindowText;
+			feed_edit.SetWindowText(sWindowText);
 		}
-
+		fb2k::CCoreDarkModeHooks m_hooks;
 		const dsp_preset & m_initData; // modal dialog so we can reference this caller-owned object.
 		dsp_preset_edit_callback & m_callback;
 		int ms, amp, feedback;
 		CTrackBarCtrl m_slider_ms, m_slider_amp, m_slider_fb;
+		CEditMod delay_edit, vol_edit, feed_edit;
+		CString delay_s, vol_s, feed_s;
 	};
 
 	static void RunDSPConfigPopup(const dsp_preset & p_data, HWND p_parent, dsp_preset_edit_callback & p_callback)

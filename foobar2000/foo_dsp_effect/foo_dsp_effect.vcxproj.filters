@@ -25,8 +25,6 @@
     <ClCompile Include="dsp_soundtouch.cpp" />
     <ClCompile Include="dsp_tremelo.cpp" />
     <ClCompile Include="dsp_vibrato.cpp" />
-    <ClCompile Include="dmodsp.cpp" />
-    <ClCompile Include="dsp_dmo.cpp" />
     <ClCompile Include="dsp_chorus.cpp" />
     <ClCompile Include="..\..\..\3rdparty-deps\SoundTouch\AAFilter.cpp">
       <Filter>DSP\SoundTouch</Filter>
@@ -92,8 +90,6 @@
       <Filter>DSP</Filter>
     </ClInclude>
     <ClInclude Include="dsp_guids.h" />
-    <ClInclude Include="..\foo_sample\resource.h" />
-    <ClInclude Include="dmodsp.h" />
     <ClInclude Include="..\..\..\3rdparty-deps\SoundTouch\AAFilter.h">
       <Filter>DSP\SoundTouch</Filter>
     </ClInclude>

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "config_object.h"
 #include "cfg_var_legacy.h"
 //template function bodies from config_object class
 
@@ -27,7 +28,7 @@ void config_object::g_set_data_struct_t(const GUID & p_guid,const T & p_in) {
 	return ptr->set_data_struct_t<T>(p_in);
 }
 
-
+#if FOOBAR2020
 class config_object_impl : public config_object, private cfg_var_legacy::cfg_var_reader
 {
 public:
@@ -45,6 +46,25 @@ private:
 	
 	fb2k::memBlockRef m_initial;
 };
+#else
+class config_object_impl : public config_object, private cfg_var_legacy::cfg_var
+{
+public:
+	GUID get_guid() const { return cfg_var::get_guid(); }
+	void get_data(stream_writer* p_stream, abort_callback& p_abort) const;
+	void set_data(stream_reader* p_stream, abort_callback& p_abort, bool p_notify);
+
+	config_object_impl(const GUID& p_guid, const void* p_data, t_size p_bytes);
+private:
+
+	//cfg_var methods
+	void get_data_raw(stream_writer* p_stream, abort_callback& p_abort) { get_data(p_stream, p_abort); }
+	void set_data_raw(stream_reader* p_stream, t_size p_sizehint, abort_callback& p_abort) { set_data(p_stream, p_abort, false); }
+
+	mutable pfc::readWriteLock m_sync;
+	pfc::array_t<t_uint8> m_data;
+};
+#endif
 
 typedef service_factory_single_transparent_t<config_object_impl> config_object_factory;
 

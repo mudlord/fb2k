@@ -1,48 +1,11 @@
-// This is the master foobar2000 SDK header file; it includes headers for all functionality exposed through the SDK project. #include this in your source code, never reference any of the other headers directly.
+// This is the master foobar2000 SDK header file; it includes headers for all functionality exposed through the SDK project. 
+// For historical reasons, this #includes everything from the SDK.
+// In new code, it is recommended to #include "foobar2000-lite.h" then any other headers on need-to-use basis.
 
 #ifndef _FOOBAR2000_H_
 #define _FOOBAR2000_H_
 
-#include "foobar2000-winver.h"
-
-// This SDK does NOT SUPPORT targets older than API 81 / foobar2000 v2.0
-// Use a 1.x series SDK if you wish to target older
-#define FOOBAR2000_TARGET_VERSION 81 // 2.0
-
-#ifdef _M_IX86
-#define FOOBAR2000_TARGET_VERSION_COMPATIBLE 72
-#else
-// x64 & ARM64 targets
-// Allow components made with new foobar2000 v1.6 SDK with x64 & ARM64 targets
-#define FOOBAR2000_TARGET_VERSION_COMPATIBLE 80
-#endif
-
-// Use this to determine what foobar2000 SDK version is in use, undefined for releases older than 2018
-#define FOOBAR2000_SDK_VERSION 20220617
-
-
-#include "foobar2000-pfc.h"
-#include "../shared/shared.h"
-
-#ifndef NOTHROW
-#ifdef _MSC_VER
-#define NOTHROW __declspec(nothrow)
-#else
-#define NOTHROW
-#endif
-#endif
-
-#define FB2KAPI /*NOTHROW*/
-
-typedef const char * pcchar;
-
-#include "core_api.h"
-#include "service.h"
-#include "service_impl.h"
-#include "service_by_guid.h"
-#include "service_compat.h"
-
-#include "forward_types.h"
+#include "foobar2000-lite.h"
 
 #include "completion_notify.h"
 #include "abort_callback.h"
@@ -123,5 +86,34 @@ typedef const char * pcchar;
 #include "configStore.h"
 
 #include "timer.h"
+
+#include "cfg_var.h"
+#include "advconfig_impl.h"
+
+
+#include "playlistColumnProvider.h"
+#include "threadPool.h"
+#include "powerManager.h"
+#include "keyValueIO.h"
+#include "audioEncoder.h"
+#include "decode_postprocessor.h"
+#include "file_format_sanitizer.h"
+#include "imageLoaderLite.h"
+#include "imageViewer.h"
+#include "playback_stream_capture.h"
+#include "message_loop.h"
+#include "chapterizer.h"
+#include "info_lookup_handler.h"
+#include "output.h"
+#include "link_resolver.h"
+#include "image.h"
+#include "fileDialog.h"
+#include "console_manager.h"
+#include "vis.h"
+#include "ole_interaction.h"
+#include "library_index.h"
+#include "ui_element.h"
+#include "ui_edit_context.h"
+#include "toolbarDropDown.h"
 
 #endif //_FOOBAR2000_H_

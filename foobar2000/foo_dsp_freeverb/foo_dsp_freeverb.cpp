@@ -10,10 +10,10 @@ static const GUID guid =
 
 DECLARE_COMPONENT_VERSION(
 	"Freeverb",
-	"0.3",
-	"A reverberation DSP for foobar2000 1.0 ->\n"
+	"0.4",
+	"A reverberation DSP for foobar2000 2.0 ->\n"
 	"Written by mudlord\n"
-	"http://mudlord.hcs64.com\n"
+	"http://mudlord.github.io\n"
 	"Based on Freeverb by Jezar Wakefield\n"
 	"Portions by Jon Watte\n"
 );
@@ -257,10 +257,10 @@ public:
 		switch(channel_count)
 		{
 		case 1:
-			Freeverb.processmono((float*)current,sample_count);
+			Freeverb.processmono((double*)current,sample_count);
 			break;
 		case 2: 
-			Freeverb.processstereo((float*)current,sample_count);
+			Freeverb.processstereo((double*)current,sample_count);
 			break;
 		}
 		return true;

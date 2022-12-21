@@ -1,4 +1,6 @@
 #pragma once
+#include "library_manager.h"
+#include "metadb_callbacks.h"
 
 //! Callback service receiving notifications about Media Library content changes. Methods called only from main thread.\n
 //! Use library_callback_factory_t template to register.
@@ -11,6 +13,10 @@ public:
 	//! Called when some items in the Media Library have been modified. \n
 	//! The list is sorted by pointer value for convenient matching by binary search.
 	virtual void on_items_modified(metadb_handle_list_cref items) = 0;
+
+	//! Is current on_items_modified() cycle called due to actual tags changed or dispaly hook operations? \n
+	//! Supported since foobar2000 v2.0 beta 13
+	static bool is_modified_from_hook();
 
 	FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(library_callback);
 };

@@ -1,5 +1,6 @@
 #pragma once
 #include <functional>
+#include "filesystem.h"
 
 namespace foobar2000_io {
 	class archive;

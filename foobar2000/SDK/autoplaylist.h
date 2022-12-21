@@ -1,4 +1,5 @@
 #pragma once
+#include "playlist.h"
 /*
 	Autoplaylist APIs
 	These APIs were introduced in foobar2000 0.9.5, to reduce amount of code required to create your own autoplaylists. Creation of autoplaylists is was also possible before through playlist lock APIs.

@@ -1,19 +1,12 @@
-
-
-// Comb filter implementation
-//
-// Written by
-// http://www.dreampoint.co.uk
-// This code is public domain
-
 #include "freeverb.h"
+#include "../SDK/foobar2000.h"
 
 comb::comb() {
 	filterstore = 0;
 	bufidx = 0;
 }
 
-void comb::setbuffer(float *buf, int size) {
+void comb::setbuffer(audio_sample *buf, int size) {
 	buffer = buf;
 	bufsize = size;
 }
@@ -40,13 +33,13 @@ float comb::getfeedback() {
 	return feedback;
 }
 
-// Allpass filter implementation
+
 
 allpass::allpass() {
 	bufidx = 0;
 }
 
-void allpass::setbuffer(float *buf, int size) {
+void allpass::setbuffer(audio_sample*buf, int size) {
 	buffer = buf;
 	bufsize = size;
 }
@@ -64,52 +57,82 @@ float allpass::getfeedback() {
 	return feedback;
 }
 
-// Reverb model implementation
+
 
 revmodel::revmodel() {
-	// Tie the components to their buffers
-	combL[0].setbuffer(bufcombL1,combtuningL1);
-	combR[0].setbuffer(bufcombR1,combtuningR1);
-	combL[1].setbuffer(bufcombL2,combtuningL2);
-	combR[1].setbuffer(bufcombR2,combtuningR2);
-	combL[2].setbuffer(bufcombL3,combtuningL3);
-	combR[2].setbuffer(bufcombR3,combtuningR3);
-	combL[3].setbuffer(bufcombL4,combtuningL4);
-	combR[3].setbuffer(bufcombR4,combtuningR4);
-	combL[4].setbuffer(bufcombL5,combtuningL5);
-	combR[4].setbuffer(bufcombR5,combtuningR5);
-	combL[5].setbuffer(bufcombL6,combtuningL6);
-	combR[5].setbuffer(bufcombR6,combtuningR6);
-	combL[6].setbuffer(bufcombL7,combtuningL7);
-	combR[6].setbuffer(bufcombR7,combtuningR7);
-	combL[7].setbuffer(bufcombL8,combtuningL8);
-	combR[7].setbuffer(bufcombR8,combtuningR8);
-	allpassL[0].setbuffer(bufallpassL1,allpasstuningL1);
-	allpassR[0].setbuffer(bufallpassR1,allpasstuningR1);
-	allpassL[1].setbuffer(bufallpassL2,allpasstuningL2);
-	allpassR[1].setbuffer(bufallpassR2,allpasstuningR2);
-	allpassL[2].setbuffer(bufallpassL3,allpasstuningL3);
-	allpassR[2].setbuffer(bufallpassR3,allpasstuningR3);
-	allpassL[3].setbuffer(bufallpassL4,allpasstuningL4);
-	allpassR[3].setbuffer(bufallpassR4,allpasstuningR4);
+		bufcomb = NULL;
+		bufallpass = NULL;
+	
+}
 
-	// Set default values
-	allpassL[0].setfeedback(0.5f);
-	allpassR[0].setfeedback(0.5f);
-	allpassL[1].setfeedback(0.5f);
-	allpassR[1].setfeedback(0.5f);
-	allpassL[2].setfeedback(0.5f);
-	allpassR[2].setfeedback(0.5f);
-	allpassL[3].setfeedback(0.5f);
-	allpassR[3].setfeedback(0.5f);
+revmodel::~revmodel()
+{
+	if (bufcomb) {
+		for (int c = 0; c < num_comb; ++c)
+		{
+			delete[] bufcomb[c];
+			bufcomb[c] = NULL;
+		}
+		delete[] bufcomb;
+		bufcomb = NULL;
+	}
+
+	if (bufallpass) {
+		for (int c = 0; c < num_allpass; ++c)
+		{
+			delete[] bufallpass[c];
+			bufallpass[c] = NULL;
+		}
+		delete[] bufallpass;
+		bufallpass = NULL;
+	}
+}
+
+void revmodel::init(int srate)
+{
+	static const int comb_lengths[8] = { 1116,1188,1277,1356,1422,1491,1557,1617 };
+	static const int allpass_lengths[4] = { 225,341,441,556 };
+
+	double r = srate * (1 / 44100.);
+	if (bufcomb) {
+		for (int c = 0; c < num_comb; ++c)
+		{
+			delete[] bufcomb[c];
+			bufcomb[c] = NULL;
+		}
+		delete[] bufcomb;
+		bufcomb = NULL;
+	}
+
+   bufcomb= new audio_sample *[num_comb];
+   for (int c = 0; c < num_comb; ++c)
+   {
+	   bufcomb[c] = new audio_sample[r*comb_lengths[c]];
+	   combL[c].setbuffer(bufcomb[c], r*comb_lengths[c]);
+   }
+
+   if (bufallpass) {
+	   for (int a = 0; a < num_allpass; ++a)
+	   {
+		   delete[] bufallpass[a];
+		   bufallpass[a] = NULL;
+	   }
+	   delete[] bufallpass;
+	   bufallpass = NULL;
+   }
+   bufallpass = new audio_sample *[num_allpass];
+   for (int a = 0;a< num_allpass; ++a)
+   {
+	   bufallpass[a] = new audio_sample[r*allpass_lengths[a]];
+	   allpassL[a].setbuffer(bufallpass[a], r*allpass_lengths[a]);
+	   allpassL[a].setfeedback(0.5f);
+   }
 	setwet(initialwet);
 	setroomsize(initialroom);
 	setdry(initialdry);
 	setdamp(initialdamp);
 	setwidth(initialwidth);
 	setmode(initialmode);
-
-	// Buffer will be full of rubbish - so we MUST mute them
 	mute();
 }
 
@@ -121,144 +144,32 @@ void revmodel::mute() {
 
 	for (i = 0; i < numcombs; i++) {
 		combL[i].mute();
-		combR[i].mute();
 	}
 
 	for (i = 0; i < numallpasses; i++) {
 		allpassL[i].mute();
-		allpassR[i].mute();
 	}
 }
 
-void revmodel::processmono(float *inout, unsigned int numsamples)
+audio_sample revmodel::processsample(audio_sample in)
 {
-	float *in_ptr  = inout;
-	float *out_ptr = inout;
-	for(int i=0; i<numsamples; i++)
+	audio_sample mono_out = 0.0f;
+	audio_sample input = (in) * gain;
+	for(int i=0; i<numcombs; i++)
 	{
-		float mono_out = 0.0f;
-		float mono_in = *in_ptr;
-		float input = (mono_in) * gain;
-
-		for(int i=0; i<numcombs; i++)
-		{
-			mono_out += combL[i].process(input);
-		}
-
-		for(int i=0; i<numallpasses; i++)
-		{
-			mono_out = allpassL[i].process(mono_out);
-		}
-
-		in_ptr++;
-		*out_ptr = mono_in * dry + mono_out * wet1;
-		out_ptr++;
+		mono_out += combL[i].process(input);
 	}
-}
-
-void revmodel::processstereo(float *inout, unsigned int numsamples)
-{
-	float *in_ptr  = inout;
-	float *out_ptr = inout;
-	for(int i=0; i<numsamples; i++)
+	for(int i=0; i<numallpasses; i++)
 	{
-		float left_out = 0.0f;
-		float left_in  = *in_ptr; //left chan
-		float right_out = 0.0f;
-		float right_in = *(in_ptr+1); //right chan
-		float input = (left_in + right_in) * gain;
-		for(int i=0; i<numcombs; i++)
-		{
-			left_out += combL[i].process(input);
-			right_out += combR[i].process(input);
-		}
-		for(int i=0; i<numallpasses; i++)
-		{
-			left_out = allpassL[i].process(left_out);
-			right_out = allpassR[i].process(right_out);
-		}
-		in_ptr+=2; //increment input pointers
-		*out_ptr = left_in * dry + left_out * wet1;
-		out_ptr++;
-		*out_ptr = right_in * dry + right_out * wet1;
-		out_ptr++;
+		mono_out = allpassL[i].process(mono_out);
 	}
-}
-
-
-void revmodel::processreplace(float *inputL, float *inputR, float *outputL, float *outputR, long numsamples, int skip) {
-	float outL, outR, input;
-
-	while (numsamples-- > 0) {
-		int i;
-
-		outL = outR = 0;
-		input = (*inputL + *inputR) * gain;
-
-		// Accumulate comb filters in parallel
-		for (i = 0; i < numcombs; i++) {
-			outL += combL[i].process(input);
-			outR += combR[i].process(input);
-		}
-
-		// Feed through allpasses in series
-		for (i = 0; i < numallpasses; i++) {
-			outL = allpassL[i].process(outL);
-			outR = allpassR[i].process(outR);
-		}
-
-		// Calculate output REPLACING anything already there
-		*outputL = outL * wet1 + outR * wet2 + *inputL * dry;
-		*outputR = outR * wet1 + outL * wet2 + *inputR * dry;
-
-		// Increment sample pointers, allowing for interleave (if any)
-		inputL += skip;
-		inputR += skip;
-		outputL += skip;
-		outputR += skip;
-	}
-}
-
-void revmodel::processmix(float *inputL, float *inputR, float *outputL, float *outputR, long numsamples, int skip) {
-	float outL, outR, input;
-
-	while (numsamples-- > 0) {
-		int i;
-
-		outL = outR = 0;
-		input = (*inputL + *inputR) * gain;
-
-		// Accumulate comb filters in parallel
-		for (i = 0; i < numcombs; i++) {
-			outL += combL[i].process(input);
-			outR += combR[i].process(input);
-		}
-
-		// Feed through allpasses in series
-		for (i = 0; i < numallpasses; i++) {
-			outL = allpassL[i].process(outL);
-			outR = allpassR[i].process(outR);
-		}
-
-		// Calculate output MIXING with anything already there
-		*outputL += outL * wet1 + outR * wet2 + *inputL * dry;
-		*outputR += outR * wet1 + outL * wet2 + *inputR * dry;
-
-		// Increment sample pointers, allowing for interleave (if any)
-		inputL += skip;
-		inputR += skip;
-		outputL += skip;
-		outputR += skip;
-	}
+	audio_sample samp = in * dry + mono_out * wet1;
+	return samp;
 }
 
 void revmodel::update() {
-	// Recalculate internal values after parameter change
-
 	int i;
-
 	wet1 = wet * (width / 2 + 0.5f);
-	wet2 = wet * ((1 - width) / 2);
 
 	if (mode >= freezemode) {
 		roomsize1 = 1;
@@ -272,19 +183,12 @@ void revmodel::update() {
 
 	for (i = 0; i < numcombs; i++) {
 		combL[i].setfeedback(roomsize1);
-		combR[i].setfeedback(roomsize1);
 	}
 
 	for (i = 0; i < numcombs; i++) {
 		combL[i].setdamp(damp1);
-		combR[i].setdamp(damp1);
 	}
 }
-
-// The following get/set functions are not inlined, because
-// speed is never an issue when calling them, and also
-// because as you develop the reverb model, you may
-// wish to take dynamic action when they are called.
 
 void revmodel::setroomsize(float value) {
 	roomsize = (value * scaleroom) + offsetroom;

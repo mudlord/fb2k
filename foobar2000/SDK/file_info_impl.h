@@ -1,6 +1,7 @@
 #pragma once
 
 #include <pfc/array.h>
+#include "file_info.h"
 
 namespace file_info_impl_utils {
 

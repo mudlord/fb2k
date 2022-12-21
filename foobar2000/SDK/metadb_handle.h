@@ -1,4 +1,7 @@
 #pragma once
+#include "filesystem.h" // t_filestats
+#include "playable_location.h"
+#include "file_info.h"
 
 class titleformat_hook;
 class titleformat_text_filter;
@@ -181,8 +184,6 @@ public:
 	virtual t_filestats2 get_stats2() const = 0;
 	virtual void formatTitle_v2(const rec_t& rec, titleformat_hook* p_hook, pfc::string_base& p_out, const service_ptr_t<titleformat_object>& p_script, titleformat_text_filter* p_filter) = 0;
 };
-
-typedef service_ptr_t<metadb_handle> metadb_handle_ptr;
 
 typedef pfc::list_base_t<metadb_handle_ptr> & metadb_handle_list_ref;
 typedef pfc::list_base_const_t<metadb_handle_ptr> const & metadb_handle_list_cref;

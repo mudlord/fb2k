@@ -1,4 +1,8 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
+
+#include "contextmenu_manager.h"
+#include "menu_helpers.h"
+#include "playlist.h"
 
 #ifdef WIN32
 

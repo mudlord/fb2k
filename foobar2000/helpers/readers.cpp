@@ -2,7 +2,7 @@
 #include "readers.h"
 #include "fullFileBuffer.h"
 #include "fileReadAhead.h"
-
+#include <SDK/file_info_impl.h>
 #include <list>
 
 t_size reader_membuffer_base::read(void * p_buffer, t_size p_bytes, abort_callback & p_abort) {

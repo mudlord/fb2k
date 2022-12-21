@@ -5,13 +5,25 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Template|Win32">
       <Configuration>Template</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Template|x64">
+      <Configuration>Template</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -27,12 +39,26 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Template|x64'" Label="Configuration">
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -41,7 +67,13 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -50,22 +82,38 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)..\$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)..\$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Template|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Template|Win32'" />
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Template|x64'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Template|Win32'" />
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\codecrack\wtl;C:\code\working\foobar2000;C:\code\working\foobar2000\libPPUI;C:\code\working\foobar2000\pfc;C:\code\working\foobar2000\foobar2000;$(IncludePath)</IncludePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\code\3rdparty-deps\wtl;$(IncludePath)</IncludePath>
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Template|x64'" />
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\codecrack\wtl;C:\code\working\foobar2000\foobar2000\foobar2000_component_client;C:\code\working\foobar2000\libPPUI;C:\code\working\foobar2000\pfc;C:\code\working\foobar2000\foobar2000\SDK;C:\code\working\foobar2000\foobar2000\shared;C:\code\working\foobar2000\foobar2000\helpers;C:\code\working\foobar2000;C:\code\working\foobar2000\foobar2000;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\codecrack\wtl;C:\code\working\foobar2000\foobar2000\foobar2000_component_client;C:\code\working\foobar2000\libPPUI;C:\code\working\foobar2000\pfc;C:\code\working\foobar2000\foobar2000\SDK;C:\code\working\foobar2000\foobar2000\shared;C:\code\working\foobar2000\foobar2000\helpers;C:\code\working\foobar2000;C:\code\working\foobar2000\foobar2000;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\code\3rdparty-deps\wtl;C:\code\working\foobar2000;C:\code\working\foobar2000\foobar2000;C:\code\working\foobar2000\foobar2000\SDK;C:\code\working\foobar2000\foobar2000\shared;C:\code\working\foobar2000\foobar2000\helpers;C:\code\working\foobar2000\foobar2000\foobar2000_component_client;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\code\3rdparty-deps\wtl;C:\code\working\foobar2000;C:\code\working\foobar2000\foobar2000;C:\code\working\foobar2000\foobar2000\SDK;C:\code\working\foobar2000\foobar2000\shared;C:\code\working\foobar2000\foobar2000\helpers;C:\code\working\foobar2000\foobar2000\foobar2000_component_client;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <SourcePath>C:\codecrack\wtl;$(SourcePath)</SourcePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <SourcePath>C:\codecrack\wtl;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -79,10 +127,11 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>shared.lib;msdmo.lib;dmoguids.lib;amstrmid.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>C:\apps\fb2kdbg\components\foo_dsp_effect.dll</OutputFile>
+      <OutputFile>C:\apps\fb2ktest\user-components\foo_dsp_effect.dll</OutputFile>
       <AdditionalLibraryDirectories>..\shared;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -90,6 +139,29 @@
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;FOO_DSP_TUTORIAL_EXPORTS;RANDOM_PREFIX=mylib;EXPORT=;OUTSIDE_SPEEX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>..\shared\shared-x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>C:\apps\fb2kx64\user-components\foo_dsp_effect.dll</OutputFile>
+      <AdditionalLibraryDirectories>..\shared;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -105,11 +177,12 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalOptions>/Zi %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>..\shared\shared.lib;msdmo.lib;dmoguids.lib;amstrmid.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>C:\apps\foobar2000\components\foo_dsp_effect.dll</OutputFile>
+      <AdditionalDependencies>..\shared\shared.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>C:\apps\fb2ktest\user-components\foo_dsp_effect.dll</OutputFile>
       <AdditionalLibraryDirectories>..\shared;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -119,6 +192,38 @@
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
+      <Profile>true</Profile>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <ProfileGuidedDatabase>foo_dsp_effect.pgd</ProfileGuidedDatabase>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;FOO_DSP_TUTORIAL_EXPORTS;RANDOM_PREFIX=mylib;EXPORT=;OUTSIDE_SPEEX;USE_MULTICH_ALWAYS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <AdditionalOptions>/Zi %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>..\shared\shared-x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>C:\apps\foobar2000\user-components\foo_dsp_effect.dll</OutputFile>
+      <AdditionalLibraryDirectories>..\shared;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
       <Profile>true</Profile>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <ProfileGuidedDatabase>foo_dsp_effect.pgd</ProfileGuidedDatabase>
@@ -139,16 +244,16 @@
     <ClCompile Include="..\..\..\3rdparty-deps\SoundTouch\SoundTouch.cpp" />
     <ClCompile Include="..\..\..\3rdparty-deps\SoundTouch\sse_optimized.cpp" />
     <ClCompile Include="..\..\..\3rdparty-deps\SoundTouch\TDStretch.cpp" />
-    <ClCompile Include="dmodsp.cpp" />
     <ClCompile Include="dsp_chorus.cpp" />
-    <ClCompile Include="dsp_dmo.cpp" />
     <ClCompile Include="dsp_echo.cpp" />
     <ClCompile Include="dsp_freeverb.cpp" />
     <ClCompile Include="dsp_iir.cpp" />
     <ClCompile Include="dsp_phaser.cpp" />
     <ClCompile Include="dsp_soundtouch.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="dsp_tremelo.cpp" />
     <ClCompile Include="dsp_vibrato.cpp" />
@@ -178,9 +283,7 @@
     <ClInclude Include="..\..\..\3rdparty-deps\SoundTouch\SoundTouch.h" />
     <ClInclude Include="..\..\..\3rdparty-deps\SoundTouch\STTypes.h" />
     <ClInclude Include="..\..\..\3rdparty-deps\SoundTouch\TDStretch.h" />
-    <ClInclude Include="..\foo_sample\resource.h" />
     <ClInclude Include="circular_buffer.h" />
-    <ClInclude Include="dmodsp.h" />
     <ClInclude Include="dsp_guids.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="echo.h" />
@@ -190,9 +293,6 @@
     <ClInclude Include="wahwah.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\3rdparty-deps\rubberband\rubberband-library.vcxproj">
-      <Project>{020ceb11-ef4e-400e-971d-a35db69d7cf9}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\..\libPPUI\libPPUI.vcxproj">
       <Project>{7729eb82-4069-4414-964b-ad399091a03f}</Project>
     </ProjectReference>

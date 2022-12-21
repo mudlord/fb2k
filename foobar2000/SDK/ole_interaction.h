@@ -2,6 +2,9 @@
 
 #ifdef _WIN32
 
+#include "mem_block_container.h"
+#include "playlist.h"
+
 class NOVTABLE playlist_dataobject_desc {
 public:
 	virtual t_size get_entry_count() const = 0;

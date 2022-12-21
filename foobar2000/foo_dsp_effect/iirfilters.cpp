@@ -34,7 +34,7 @@ void IIRFilter::setGain(float val)
 
 //lynched from SoX >w>
 void IIRFilter::make_poly_from_roots(
-	double const * roots, size_t num_roots, float * poly)
+	double const * roots, size_t num_roots, audio_sample * poly)
 {
 	size_t i, j;
 	poly[0] = 1;
@@ -231,10 +231,10 @@ void IIRFilter::init(int samplerate, int filter_type)
 	}
 }
 
-float IIRFilter::Process(float samp)
+audio_sample IIRFilter::Process(audio_sample samp)
 {
 	AVOIDDENORMALS
-	float out, in = 0;
+	audio_sample out, in = 0;
 	in = samp;
 	out = (b0 * in + b1 * xn1 + b2 * xn2 - a1 * yn1 - a2 * yn2) / a0;
 	xn2 = xn1;

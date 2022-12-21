@@ -3,6 +3,7 @@
 #include <functional>
 #include <initializer_list>
 #include <pfc/list.h>
+#include "completion_notify.h"
 
 namespace fb2k {
 	typedef service_ptr objRef;

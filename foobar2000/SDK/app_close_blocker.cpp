@@ -1,4 +1,5 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
+#include "app_close_blocker.h"
 
 bool app_close_blocker::g_query()
 {

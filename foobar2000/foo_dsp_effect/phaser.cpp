@@ -60,9 +60,9 @@ void Phaser::init(int samplerate)
 		old[j] = 0;   
 }
 
-float Phaser::Process(float in)
+audio_sample Phaser::Process(audio_sample in)
 {
-	float m, tmp, out;
+	audio_sample m, tmp, out;
 	int i, j;
 	m = in + fbout * fb / 100;
 	if (((skipcount++) % lfoskipsamples) == 0) {

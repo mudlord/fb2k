@@ -2,6 +2,8 @@
 
 #include "cue_creator.h"
 #include <SDK/chapterizer.h>
+#include <SDK/input_impl.h>
+
 //HINT: for info on how to generate an embedded cuesheet enabled input, see the end of this header.
 
 

@@ -1,4 +1,6 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
+#include "replaygain.h"
+#include "replaygain_scanner.h"
 
 void t_replaygain_config::reset()
 {

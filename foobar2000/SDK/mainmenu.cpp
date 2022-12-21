@@ -1,4 +1,5 @@
-#include "foobar2000.h"
+#include "foobar2000-sdk-pch.h"
+#include "menu_helpers.h"
 
 bool mainmenu_commands::g_execute_dynamic(const GUID & p_guid, const GUID & p_subGuid,service_ptr_t<service_base> p_callback) {
 	mainmenu_commands::ptr ptr; t_uint32 index;

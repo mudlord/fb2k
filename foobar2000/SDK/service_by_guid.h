@@ -1,7 +1,5 @@
 #pragma once
-#ifdef FOOBAR2000_MODERN
 #include <pfc/map.h>
-#endif
 
 
 
