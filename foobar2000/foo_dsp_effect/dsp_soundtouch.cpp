@@ -1194,11 +1194,11 @@ static const CDialogResizeHelper::Param chorus_uiresize[] = {
 // 1,1,1,1 means that the control is aligned to bottom+right but doesn't resize
 // 0,0,1,0 means that the control disregards vertical resize (aligned to top) and changes its width with the dialog
 };
-static const CRect resizeMinMax(200, 100, 1000, 1000);
+static const CRect resizeMinMax(200, 120, 1000, 1000);
 
 
 
-class uielem_tempo : public CDialogImpl<uielem_tempo>, public ui_element_instance {
+class uielem_tempo : public CDialogImpl<uielem_tempo>, public ui_element_instance, private play_callback_impl_base{
 public:
 	uielem_tempo(ui_element_config::ptr cfg, ui_element_instance_callback::ptr cb) : m_callback(cb), m_resizer(chorus_uiresize, resizeMinMax) {
 		tempo = 0.0; tempo_enabled = false;
@@ -1259,7 +1259,7 @@ public:
 
 
 		ret.m_min_width = MulDiv(200, DPI.cx, 96);
-		ret.m_min_height = MulDiv(100, DPI.cy, 96);
+		ret.m_min_height = MulDiv(120, DPI.cy, 96);
 		ret.m_max_width = MulDiv(1000, DPI.cx, 96);
 		ret.m_max_height = MulDiv(1000, DPI.cy, 96);
 
@@ -1294,6 +1294,7 @@ public:
 	BOOL OnInitDialog(CWindow hwnd, LPARAM) {
 		tempo_edit.AttachToDlgItem(m_hWnd);
 		tempo_edit.SubclassWindow(GetDlgItem(IDC_PITCH_EDIT));
+		
 		slider_tempo = GetDlgItem(IDC_PITCH_UI);
 		m_buttonTempoEnabled = GetDlgItem(IDC_PITCHENABLED_UI);
 		slider_tempo.SetRange(0, tempomax);
@@ -1304,6 +1305,21 @@ public:
 
 		ApplySettings();
 
+		tempo_tag = GetDlgItem(IDC_TAG_EDIT);
+		metadb_handle_ptr out;
+		if (!static_api_ptr_t<playback_control>()->get_now_playing(out))
+		{
+			pfc::string_formatter msg;
+			msg.reset();
+			msg << "None";
+			CString sWindowText;
+			sWindowText = msg.c_str();
+			tempo_tag.SetWindowText(sWindowText);
+
+		}
+		else
+			on_playback_new_track(out);
+
 		return FALSE;
 	}
 	
@@ -1313,6 +1329,7 @@ protected:
 	const ui_element_instance_callback::ptr m_callback;
 
 private:
+	
 	CDialogResizeHelper m_resizer;
 	fb2k::CCoreDarkModeHooks m_hooks;
 	uint32_t shit;
@@ -1323,6 +1340,57 @@ private:
 	bool m_ownTempoUpdate, m_ownRateUpdate;
 	CEditMod tempo_edit;
 	CString tempo_s;
+
+	float tempo_tagval;
+	CEdit tempo_tag;
+
+	void on_playback_starting(play_control::t_track_command p_command, bool p_paused) { }
+	void on_playback_stop(play_control::t_stop_reason p_reason) {  }
+	void on_playback_seek(double p_time) {  }
+	void on_playback_pause(bool p_state) {  }
+	void on_playback_edited(metadb_handle_ptr p_track) {  }
+	void on_playback_dynamic_info(const file_info& p_info) {  }
+	void on_playback_dynamic_info_track(const file_info& p_info) { }
+	void on_playback_time(double p_time) {  }
+	void on_volume_change(float p_new_val) {}
+
+	void on_playback_new_track(metadb_handle_ptr p_track) {
+		service_ptr_t<metadb_info_container> out;
+		if (p_track->get_info_ref(out))
+		{
+			const file_info& file_inf = out->info();
+			if (file_inf.meta_exists("tempo_amt"))
+			{
+				const char* meta = file_inf.meta_get("tempo_amt", 0);
+				tempo_tagval = pfc::string_to_float(meta, strlen("tempo_amt"));
+				pfc::string_formatter msg;
+				msg.reset();
+				msg << pfc::format_float(tempo_tagval, 0, 2);
+				CString sWindowText;
+				sWindowText = msg.c_str();
+				tempo_tag.SetWindowText(sWindowText);
+
+				msg.reset();
+				msg << "tempo_amt tag (%):  ";
+				msg << (tempo_tagval < 0 ? "-" : "+");
+				::uSetDlgItemText(*this, IDC_PITCHTAG, msg);
+			}
+			else
+			{
+				tempo_tagval = 0.0;
+				pfc::string_formatter msg;
+				msg.reset();
+				msg << "None";
+				CString sWindowText;
+				sWindowText = msg.c_str();
+				tempo_tag.SetWindowText(sWindowText);
+				msg.reset();
+				msg << "No tempo_amt tag";
+				::uSetDlgItemText(*this, IDC_PITCHTAG, msg);
+			}
+		}
+	}
+
 
 	void ApplySettings()
 	{
@@ -1374,6 +1442,21 @@ private:
 			}
 		}
 		return 0;
+	}
+
+	void OnEnabledTag(UINT uNotifyCode, int nID, CWindow wndCtl) {
+
+		if (IsTempoEnabled()) {
+			GetConfig();
+			dsp_preset_impl preset;
+			dsp_tempo::make_preset(tempo, tempo_enabled, preset);
+			//yes change api;
+			static_api_ptr_t<dsp_config_manager>()->core_enable_dsp(preset, dsp_config_manager::default_insert_last);
+		}
+		else {
+			static_api_ptr_t<dsp_config_manager>()->core_disable_dsp(guid_tempo);
+		}
+
 	}
 
 	void OnEnabledToggle(UINT uNotifyCode, int nID, CWindow wndCtl) {
@@ -1458,7 +1541,7 @@ private:
 
 };
 
-class uielem_rate : public CDialogImpl<uielem_rate>, public ui_element_instance {
+class uielem_rate : public CDialogImpl<uielem_rate>, public ui_element_instance, private play_callback_impl_base {
 public:
 	uielem_rate(ui_element_config::ptr cfg, ui_element_instance_callback::ptr cb) : m_callback(cb), m_resizer(chorus_uiresize, resizeMinMax) {
 		rate = 0.0; rate_enabled = false;
@@ -1517,7 +1600,7 @@ public:
 
 
 		ret.m_min_width = MulDiv(200, DPI.cx, 96);
-		ret.m_min_height = MulDiv(100, DPI.cy, 96);
+		ret.m_min_height = MulDiv(120, DPI.cy, 96);
 		ret.m_max_width = MulDiv(1000, DPI.cx, 96);
 		ret.m_max_height = MulDiv(1000, DPI.cy, 96);
 
@@ -1527,6 +1610,58 @@ public:
 		return ret;
 	}
 private:
+	float tempo_tagval;
+	CEdit tempo_tag;
+
+	void on_playback_starting(play_control::t_track_command p_command, bool p_paused) { }
+	void on_playback_stop(play_control::t_stop_reason p_reason) {  }
+	void on_playback_seek(double p_time) {  }
+	void on_playback_pause(bool p_state) {  }
+	void on_playback_edited(metadb_handle_ptr p_track) {  }
+	void on_playback_dynamic_info(const file_info& p_info) {  }
+	void on_playback_dynamic_info_track(const file_info& p_info) { }
+	void on_playback_time(double p_time) {  }
+	void on_volume_change(float p_new_val) {}
+
+	void on_playback_new_track(metadb_handle_ptr p_track) {
+		service_ptr_t<metadb_info_container> out;
+		if (p_track->get_info_ref(out))
+		{
+			const file_info& file_inf = out->info();
+			if (file_inf.meta_exists("pbrate_amt"))
+			{
+				const char* meta = file_inf.meta_get("pbrate_amt", 0);
+				tempo_tagval = pfc::string_to_float(meta, strlen("pbrate_amt"));
+				pfc::string_formatter msg;
+				msg.reset();
+				msg << pfc::format_float(tempo_tagval, 0, 2);
+				CString sWindowText;
+				sWindowText = msg.c_str();
+				tempo_tag.SetWindowText(sWindowText);
+
+				msg.reset();
+				msg << "pbrate_amt tag (%):  ";
+				msg << (tempo_tagval < 0 ? "-" : "+");
+				::uSetDlgItemText(*this, IDC_PITCHTAG, msg);
+			}
+			else
+			{
+				tempo_tagval = 0.0;
+				pfc::string_formatter msg;
+				msg.reset();
+				msg << "None";
+				CString sWindowText;
+				sWindowText = msg.c_str();
+				tempo_tag.SetWindowText(sWindowText);
+				msg.reset();
+				msg << "No tempo_amt tag";
+				::uSetDlgItemText(*this, IDC_PITCHTAG, msg);
+			}
+		}
+	}
+
+
+
 	CDialogResizeHelper m_resizer;
 	fb2k::CCoreDarkModeHooks m_hooks;
 	void SetRateEnabled(bool state) { m_buttonRateEnabled.SetCheck(state ? BST_CHECKED : BST_UNCHECKED); }
@@ -1692,6 +1827,20 @@ private:
 		slider_rate.SetRange(0, 15000);
 		m_hooks.AddDialogWithControls(m_hWnd);
 		ApplySettings();
+
+		tempo_tag = GetDlgItem(IDC_TAG_EDIT);
+		metadb_handle_ptr out;
+		if (!static_api_ptr_t<playback_control>()->get_now_playing(out))
+		{
+			pfc::string_formatter msg;
+			msg.reset();
+			msg << "None";
+			CString sWindowText;
+			sWindowText = msg.c_str();
+			tempo_tag.SetWindowText(sWindowText);
+
+		}else
+		on_playback_new_track(out);
 		return FALSE;
 	}
 
@@ -1711,7 +1860,7 @@ protected:
 };
 
 
-class uielem_pitch : public CDialogImpl<uielem_pitch>, public ui_element_instance {
+class uielem_pitch : public CDialogImpl<uielem_pitch>, public ui_element_instance, private play_callback_impl_base {
 public:
 	uielem_pitch(ui_element_config::ptr cfg, ui_element_instance_callback::ptr cb) : m_callback(cb), m_resizer(chorus_uiresize, resizeMinMax) {
 		pitch = 0.0; pitch_enabled = false;
@@ -1772,7 +1921,7 @@ public:
 
 
 		ret.m_min_width = MulDiv(200, DPI.cx, 96);
-		ret.m_min_height = MulDiv(100, DPI.cy, 96);
+		ret.m_min_height = MulDiv(120, DPI.cy, 96);
 		ret.m_max_width = MulDiv(1000, DPI.cx, 96);
 		ret.m_max_height = MulDiv(1000, DPI.cy, 96);
 
@@ -1782,6 +1931,57 @@ public:
 		return ret;
 	}
 private:
+	float tempo_tagval;
+	CEdit tempo_tag;
+
+	void on_playback_starting(play_control::t_track_command p_command, bool p_paused) { }
+	void on_playback_stop(play_control::t_stop_reason p_reason) {  }
+	void on_playback_seek(double p_time) {  }
+	void on_playback_pause(bool p_state) {  }
+	void on_playback_edited(metadb_handle_ptr p_track) {  }
+	void on_playback_dynamic_info(const file_info& p_info) {  }
+	void on_playback_dynamic_info_track(const file_info& p_info) { }
+	void on_playback_time(double p_time) {  }
+	void on_volume_change(float p_new_val) {}
+
+	void on_playback_new_track(metadb_handle_ptr p_track) {
+		service_ptr_t<metadb_info_container> out;
+		if (p_track->get_info_ref(out))
+		{
+			const file_info& file_inf = out->info();
+			if (file_inf.meta_exists("pitch_amt"))
+			{
+				const char* meta = file_inf.meta_get("pitch_amt", 0);
+				tempo_tagval = pfc::string_to_float(meta, strlen("pitch_amt"));
+				pfc::string_formatter msg;
+				msg.reset();
+				msg << pfc::format_float(tempo_tagval, 0, 2);
+				CString sWindowText;
+				sWindowText = msg.c_str();
+				tempo_tag.SetWindowText(sWindowText);
+
+				msg.reset();
+				msg << "pitch_amt tag (semitones):  ";
+				msg << (tempo_tagval < 0 ? "-" : "+");
+				::uSetDlgItemText(*this, IDC_PITCHTAG, msg);
+			}
+			else
+			{
+				tempo_tagval = 0.0;
+				pfc::string_formatter msg;
+				msg.reset();
+				msg << "None";
+				CString sWindowText;
+				sWindowText = msg.c_str();
+				tempo_tag.SetWindowText(sWindowText);
+				msg.reset();
+				msg << "No pitch_amt tag";
+				::uSetDlgItemText(*this, IDC_PITCHTAG, msg);
+			}
+		}
+	}
+
+
 	CDialogResizeHelper m_resizer;
 	fb2k::CCoreDarkModeHooks m_hooks;
 
@@ -1951,6 +2151,20 @@ private:
 
 		ApplySettings();
 
+		tempo_tag = GetDlgItem(IDC_TAG_EDIT);
+		metadb_handle_ptr out;
+		if (!static_api_ptr_t<playback_control>()->get_now_playing(out))
+		{
+			pfc::string_formatter msg;
+			msg.reset();
+			msg << "None";
+			CString sWindowText;
+			sWindowText = msg.c_str();
+			tempo_tag.SetWindowText(sWindowText);
+
+		}
+		else
+			on_playback_new_track(out);
 		return FALSE;
 	}
 	uint32_t shit;

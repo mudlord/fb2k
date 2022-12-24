@@ -187,6 +187,7 @@
 #define IDC_PITCH_EDIT                  1195
 #define IDC_PITCHINFO_UI2               1196
 #define IDC_TEMPOALG                    1197
+#define IDC_TAG_EDIT                    1197
 #define IDC_RESET                       1198
 #define IDC_PITCHALGO                   1199
 #define IDC_PITCH_EDIT2                 1199
@@ -267,6 +268,7 @@
 #define IDC_STATIC2                     1341
 #define IDC_STATIC3                     1342
 #define IDC_STATIC4                     1343
+#define IDC_PITCHTAG                    1344
 #define IDC_SLIDER                      -1
 
 // Next default values for new objects
@@ -275,7 +277,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        131
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1344
+#define _APS_NEXT_CONTROL_VALUE         1345
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
