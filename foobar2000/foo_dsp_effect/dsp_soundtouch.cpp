@@ -1344,15 +1344,17 @@ private:
 	float tempo_tagval;
 	CEdit tempo_tag;
 
-	void on_playback_starting(play_control::t_track_command p_command, bool p_paused) { }
-	void on_playback_stop(play_control::t_stop_reason p_reason) {  }
-	void on_playback_seek(double p_time) {  }
-	void on_playback_pause(bool p_state) {  }
+	void on_playback_starting(play_control::t_track_command p_command, bool p_paused) { ApplySettings(); }
+	void on_playback_stop(play_control::t_stop_reason p_reason) { ApplySettings(); }
+	void on_playback_seek(double p_time) { ApplySettings(); }
+	void on_playback_pause(bool p_state) { ApplySettings(); }
 	void on_playback_edited(metadb_handle_ptr p_track) {  }
 	void on_playback_dynamic_info(const file_info& p_info) {  }
 	void on_playback_dynamic_info_track(const file_info& p_info) { }
-	void on_playback_time(double p_time) {  }
-	void on_volume_change(float p_new_val) {}
+	void on_playback_time(double p_time) { }
+	void on_volume_change(float p_new_val) { }
+
+
 
 	void on_playback_new_track(metadb_handle_ptr p_track) {
 		service_ptr_t<metadb_info_container> out;
@@ -1371,7 +1373,7 @@ private:
 				tempo_tag.SetWindowText(sWindowText);
 
 				msg.reset();
-				msg << "tempo_amt tag (%):  ";
+				msg << "tempo_amt tag:";
 				msg << (tempo_tagval < 0 ? "-" : "+");
 				::uSetDlgItemText(*this, IDC_PITCHTAG, msg);
 			}
@@ -1442,21 +1444,6 @@ private:
 			}
 		}
 		return 0;
-	}
-
-	void OnEnabledTag(UINT uNotifyCode, int nID, CWindow wndCtl) {
-
-		if (IsTempoEnabled()) {
-			GetConfig();
-			dsp_preset_impl preset;
-			dsp_tempo::make_preset(tempo, tempo_enabled, preset);
-			//yes change api;
-			static_api_ptr_t<dsp_config_manager>()->core_enable_dsp(preset, dsp_config_manager::default_insert_last);
-		}
-		else {
-			static_api_ptr_t<dsp_config_manager>()->core_disable_dsp(guid_tempo);
-		}
-
 	}
 
 	void OnEnabledToggle(UINT uNotifyCode, int nID, CWindow wndCtl) {
@@ -1613,15 +1600,15 @@ private:
 	float tempo_tagval;
 	CEdit tempo_tag;
 
-	void on_playback_starting(play_control::t_track_command p_command, bool p_paused) { }
+	void on_playback_starting(play_control::t_track_command p_command, bool p_paused) { ApplySettings(); }
 	void on_playback_stop(play_control::t_stop_reason p_reason) {  }
 	void on_playback_seek(double p_time) {  }
 	void on_playback_pause(bool p_state) {  }
 	void on_playback_edited(metadb_handle_ptr p_track) {  }
 	void on_playback_dynamic_info(const file_info& p_info) {  }
 	void on_playback_dynamic_info_track(const file_info& p_info) { }
-	void on_playback_time(double p_time) {  }
-	void on_volume_change(float p_new_val) {}
+	void on_playback_time(double p_time) { }
+	void on_volume_change(float p_new_val) { }
 
 	void on_playback_new_track(metadb_handle_ptr p_track) {
 		service_ptr_t<metadb_info_container> out;
@@ -1640,7 +1627,7 @@ private:
 				tempo_tag.SetWindowText(sWindowText);
 
 				msg.reset();
-				msg << "pbrate_amt tag (%):  ";
+				msg << "pbrate_amt tag:";
 				msg << (tempo_tagval < 0 ? "-" : "+");
 				::uSetDlgItemText(*this, IDC_PITCHTAG, msg);
 			}
@@ -1654,7 +1641,7 @@ private:
 				sWindowText = msg.c_str();
 				tempo_tag.SetWindowText(sWindowText);
 				msg.reset();
-				msg << "No tempo_amt tag";
+				msg << "No pbrate_amt tag";
 				::uSetDlgItemText(*this, IDC_PITCHTAG, msg);
 			}
 		}
@@ -1934,17 +1921,18 @@ private:
 	float tempo_tagval;
 	CEdit tempo_tag;
 
-	void on_playback_starting(play_control::t_track_command p_command, bool p_paused) { }
-	void on_playback_stop(play_control::t_stop_reason p_reason) {  }
-	void on_playback_seek(double p_time) {  }
-	void on_playback_pause(bool p_state) {  }
+	void on_playback_starting(play_control::t_track_command p_command, bool p_paused) { ApplySettings(); }
+	void on_playback_stop(play_control::t_stop_reason p_reason) { ApplySettings(); }
+	void on_playback_seek(double p_time) { ApplySettings(); }
+	void on_playback_pause(bool p_state) { ApplySettings(); }
 	void on_playback_edited(metadb_handle_ptr p_track) {  }
 	void on_playback_dynamic_info(const file_info& p_info) {  }
 	void on_playback_dynamic_info_track(const file_info& p_info) { }
-	void on_playback_time(double p_time) {  }
-	void on_volume_change(float p_new_val) {}
+	void on_playback_time(double p_time) { }
+	void on_volume_change(float p_new_val) { }
 
 	void on_playback_new_track(metadb_handle_ptr p_track) {
+		ApplySettings();
 		service_ptr_t<metadb_info_container> out;
 		if (p_track->get_info_ref(out))
 		{
@@ -1961,7 +1949,7 @@ private:
 				tempo_tag.SetWindowText(sWindowText);
 
 				msg.reset();
-				msg << "pitch_amt tag (semitones):  ";
+				msg << "pitch_amt tag:";
 				msg << (tempo_tagval < 0 ? "-" : "+");
 				::uSetDlgItemText(*this, IDC_PITCHTAG, msg);
 			}
@@ -2333,12 +2321,12 @@ class play_callback_st : public play_callback_static
 			prev_bak = false;
 			static_api_ptr_t<dsp_config_manager>()->core_enable_dsp(preset2, dsp_config_manager::default_insert_last);
 		}
-		if (static_api_ptr_t<dsp_config_manager>()->core_query_dsp(guid_tempo, preset3)) {
+		if (static_api_ptr_t<dsp_config_manager>()->core_query_dsp(guid_tempo, preset3) && prev_bak2) {
 			prev_bak2 = false;
 			dsp_tempo::make_preset(prev_temp, prev_tempb, preset3);
 			static_api_ptr_t<dsp_config_manager>()->core_enable_dsp(preset3, dsp_config_manager::default_insert_last);
 		}
-		if (static_api_ptr_t<dsp_config_manager>()->core_query_dsp(guid_pbrate, preset4)) {
+		if (static_api_ptr_t<dsp_config_manager>()->core_query_dsp(guid_pbrate, preset4) && prev_bak3) {
 			prev_bak3 = false;
 			dsp_rate::make_preset(prev_rate, prev_rateb, preset4);
 			static_api_ptr_t<dsp_config_manager>()->core_enable_dsp(preset4, dsp_config_manager::default_insert_last);

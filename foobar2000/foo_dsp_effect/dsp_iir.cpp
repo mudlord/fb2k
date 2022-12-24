@@ -460,7 +460,7 @@ namespace {
 	static const CRect resizeMinMax(220, 120, 1000, 1000);
 
 
-	class uielem_iir : public CDialogImpl<uielem_iir>, public ui_element_instance {
+	class uielem_iir : public CDialogImpl<uielem_iir>, public ui_element_instance, private play_callback_impl_base {
 	public:
 		uielem_iir(ui_element_config::ptr cfg, ui_element_instance_callback::ptr cb) : m_callback(cb),m_resizer(chorus_uiresize, resizeMinMax) {
 			p_freq = 400; p_gain = 10; p_type = 0;
@@ -536,6 +536,17 @@ namespace {
 		}
 
 	private:
+		void on_playback_starting(play_control::t_track_command p_command, bool p_paused) { ApplySettings(); }
+		void on_playback_stop(play_control::t_stop_reason p_reason) { ApplySettings(); }
+		void on_playback_seek(double p_time) { ApplySettings(); }
+		void on_playback_pause(bool p_state) { ApplySettings(); }
+		void on_playback_edited(metadb_handle_ptr p_track) {  }
+		void on_playback_dynamic_info(const file_info& p_info) {  }
+		void on_playback_dynamic_info_track(const file_info& p_info) { }
+		void on_playback_time(double p_time) { }
+		void on_volume_change(float p_new_val) { }
+		void on_playback_new_track(metadb_handle_ptr p_track) {}
+
 		fb2k::CCoreDarkModeHooks m_hooks;
 		LRESULT OnEditControlChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 		{

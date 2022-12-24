@@ -169,7 +169,7 @@ namespace {
 	static const GUID guid_choruselem
 	{ 0x634933f1, 0xbdb6, 0x4d4c,{ 0x8a, 0x68, 0x28, 0xb9, 0xd, 0xc0, 0xfe, 0x3 } };
 
-	class uielem_echo : public CDialogImpl<uielem_echo>, public ui_element_instance {
+	class uielem_echo : public CDialogImpl<uielem_echo>, public ui_element_instance, private play_callback_impl_base {
 	public:
 		uielem_echo(ui_element_config::ptr cfg, ui_element_instance_callback::ptr cb) : m_callback(cb), m_resizer(chorus_uiresize, resizeMinMax) {
 			ms = 200;
@@ -257,6 +257,17 @@ namespace {
 		}
 
 	private:
+		void on_playback_starting(play_control::t_track_command p_command, bool p_paused) { ApplySettings(); }
+		void on_playback_stop(play_control::t_stop_reason p_reason) { ApplySettings(); }
+		void on_playback_seek(double p_time) { ApplySettings(); }
+		void on_playback_pause(bool p_state) { ApplySettings(); }
+		void on_playback_edited(metadb_handle_ptr p_track) {  }
+		void on_playback_dynamic_info(const file_info& p_info) {  }
+		void on_playback_dynamic_info_track(const file_info& p_info) { }
+		void on_playback_time(double p_time) { }
+		void on_volume_change(float p_new_val) { }
+		void on_playback_new_track(metadb_handle_ptr p_track) {}
+
 		void SetEchoEnabled(bool state) { m_buttonEchoEnabled.SetCheck(state ? BST_CHECKED : BST_UNCHECKED); }
 		bool IsEchoEnabled() { return m_buttonEchoEnabled == NULL || m_buttonEchoEnabled.GetCheck() == BST_CHECKED; }
 
