@@ -145,13 +145,11 @@ public:
 			{
 				if (m_rate / 10 < samples_to_add) samples_to_add = m_rate / 10;
 				frames_until_next += m_rate / 10;
-				double loud = 0.0;
-				ebur128_loudness_global(m_state, &loud);
-				target_scale = loudness_to_scale(loud);
+				target_scale = loudness_to_scale(ebur128_loudness_global(m_state));
 			}
 
 			if (add_frames(m_state, chunk->get_data() + chunk->get_channels() * samples_added, samples_to_add)) { return true; }
-
+			ebur128_gated_loudness_cleanup(m_state, block_count);
 			samples_added += samples_to_add;
 			frames_until_next -= samples_to_add;
 		}
@@ -220,10 +218,13 @@ private:
 
 		m_state = ebur128_init( m_ch, m_rate, EBUR128_MODE_I );
 		if ( !m_state ) throw std::bad_alloc();
-		for ( unsigned i = 0; i < m_ch; i++ )
+		pfc::array_t<int> channel_map;
+		channel_map.set_count(m_ch);
+
+		for (unsigned i = 0; i < m_ch; i++)
 		{
 			int channel = EBUR128_UNUSED;
-			switch ( audio_chunk::g_extract_channel_flag( m_ch_mask, i ) )
+			switch (audio_chunk::g_extract_channel_flag(m_ch_mask, i))
 			{
 			case audio_chunk::channel_front_left:   channel = EBUR128_LEFT;           break;
 			case audio_chunk::channel_front_right:  channel = EBUR128_RIGHT;          break;
@@ -231,8 +232,11 @@ private:
 			case audio_chunk::channel_back_left:    channel = EBUR128_LEFT_SURROUND;  break;
 			case audio_chunk::channel_back_right:   channel = EBUR128_RIGHT_SURROUND; break;
 			}
-			ebur128_set_channel(m_state, i,channel);
+			channel_map[i] = channel;
 		}
+
+		ebur128_set_channel_map(m_state, channel_map.get_ptr());
+
 
 		
 
