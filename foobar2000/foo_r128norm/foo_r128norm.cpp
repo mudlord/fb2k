@@ -1,9 +1,12 @@
 #include "stdafx.h"
 
-#define MY_VERSION "1.11"
+#define MY_VERSION "1.12"
 
 /*
 	change log
+
+2023-03-06 - mudlord
+- recompiled for 2.0 x64
 
 2011-12-19 03:09 UTC - kode54
 - Changed a number of constants to local variables in preparation for adding a
